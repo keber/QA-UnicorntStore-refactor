@@ -11,9 +11,9 @@
 
 | Module | Submodule | TCs Total | TCs Automated | Plan | Status | Last Run |
 |---|---|---|---|---|---|---|
-| CAT (Catálogo) | LISTADO | 50 | 0 | ⬜ | ✅ Stage 2 done | — |
-| CAT (Catálogo) | DETALLE | 55 | 0 | ⬜ | ✅ Stage 2 done | — |
-| CARR (Carrito) | CARRITO | 55 | 0 | ⬜ | ✅ Stage 2 done | — |
+| CAT (Catálogo) | LISTADO | 50 | 0 | ✅ | ✅ Stage 3 done | — |
+| CAT (Catálogo) | DETALLE | 55 | 0 | ✅ | ✅ Stage 3 done | — |
+| CARR (Carrito) | CARRITO | 55 | 0 | ✅ | ✅ Stage 3 done | — |
 
 **Legend**: ✅ Done · ⚠️ Partial · 🔲 Not started · ⛔ Blocked
 
@@ -111,3 +111,4 @@ _No sprints completed yet._
 | Automation Config | `qa/07-automation/e2e/playwright.config.ts` |
 | CI Workflow | `.github/workflows/qa-e2e.yml` |
 | Architecture Findings | `qa/memory/arquitectura-unicornstore-2026-08-26.md` |
+| Sprint 001 Test Plans | `qa/02-test-plans/sprints/Sprint-001/` |

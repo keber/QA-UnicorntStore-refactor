@@ -8,3 +8,4 @@ dist
 diagnosis
 *.tsbuildinfo
 .playwright-cli
+debug.log

@@ -1,4 +1,4 @@
-# Session Summary — 2026-08-26 (Stage 1 + Stage 2: CAT + CARR)
+# Session Summary — 2026-08-26 (Stage 1 + Stage 2 + Stage 3: CAT + CARR)
 
 ## Modules analyzed
 
@@ -43,9 +43,29 @@ Se revisaron los 6 archivos de spec de los 3 submódulos contra las reglas de
 - Ningún TC nuevo fue necesario: las reglas agregadas ya estaban cubiertas por TCs existentes de
   Stage 1, solo faltaba formalizarlas como RN/FL.
 
+## Stage 3 (same session)
+
+Se generó el Plan de Pruebas Sprint 1 para ambos módulos, uno por módulo (convención
+"Multi-Module Sprint" del skill):
+
+- `qa/02-test-plans/sprints/Sprint-001/Plan-de-Pruebas-QA-UnicorntStore-refactor-Sprint-001-CAT.md`
+  — 105 TCs (LISTADO + DETALLE) en 7 suites funcionales.
+- `qa/02-test-plans/sprints/Sprint-001/Plan-de-Pruebas-QA-UnicorntStore-refactor-Sprint-001-CARR.md`
+  — 55 TCs en 7 suites funcionales.
+
+Reglas aplicadas: `[SMOKE]` solo para TCs `Type≠Negative` con `Priority=P0`; todo lo demás
+`[REGRESION]` (coherente con el propósito del proyecto: capturar línea base para el refactor).
+`Tipo=Bloqueado` únicamente para los 4 TCs `PENDING-CODE` de CAT. Sin ADO: columna `Confirma` =
+`N/A` en las 160 filas, trazabilidad sustituida por submódulo de origen y por defecto
+(`DEF-001`/`DEF-002`). Los pasos que en la spec original tenían un solo paso se expandieron a 2
+(acción + verificación explícita) para cumplir el gate de la plantilla. Todas las 160 TCs de
+Stage 1/2 quedaron representadas 1:1 en las tablas (verificado programáticamente, sin duplicados
+ni faltantes).
+
 ## Next steps
 
-1. Stage 3 (`qa-test-plan`): Plan de Pruebas Sprint 1, cubriendo ambos módulos.
-2. Decidir con negocio/dev si DEF-001 y DEF-002 se corrigen antes de automatizar los TCs
+1. Decidir con negocio/dev si DEF-001 y DEF-002 se corrigen antes de automatizar los TCs
    afectados, o si se automatizan documentando el comportamiento actual con `test.fixme()`.
-3. Stage 5 (`qa-automation`): automatizar P0 primero una vez exista el Plan de Pruebas.
+2. Stage 5 (`qa-automation`): automatizar P0 primero (18 en CAT, 14 en CARR) tomando las Tablas
+   de Pruebas de `qa/02-test-plans/sprints/Sprint-001/` como fuente, no las specs de Stage 1/2
+   directamente (regla del pipeline: no automatizar TCs fuera de un Plan de Pruebas activo).
