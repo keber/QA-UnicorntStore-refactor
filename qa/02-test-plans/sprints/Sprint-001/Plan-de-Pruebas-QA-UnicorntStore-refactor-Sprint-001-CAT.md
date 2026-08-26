@@ -140,9 +140,9 @@ ejecución (ver `qa/01-specifications/module-catalogo/*/04-test-data.md`).
   comportamiento *actual* (defectuoso). Al automatizar (Stage 5), estas 3 deben marcarse con
   `test.fixme()` referenciando `DEF-001`, no como fallos de la suite.
 - **4 TCs `Bloqueado`** (filas de categoría "Tazón" y de variantes/reseñas/relacionados en el
-  detalle) documentan la *ausencia* de una feature, no un defecto. Queda pendiente confirmar con
-  negocio si son omisiones intencionales o brechas de roadmap antes de decidir si alguna vez se
-  automatizan más allá de la aserción de ausencia actual.
+  detalle) documentan la *ausencia* de una feature, no un defecto. **Decisión de negocio
+  confirmada (2026-08-26): permanecen fuera de alcance** — no se automatiza más allá de la
+  aserción de ausencia actual. Se revisita únicamente si estas features llegan a implementarse.
 - **TCs de origen `PENDING-BROWSER`** (accesibilidad por teclado, viewport móvil, doble-click) no
   se ejercitaron manualmente durante la exploración de Stage 1, pero son deterministas y
   automatizables sin dependencias externas — se incluyen en este plan como `Automatizado`. Si al

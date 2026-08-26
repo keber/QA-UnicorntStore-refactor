@@ -58,7 +58,7 @@ npx playwright test --last-failed
 
 | Suite | Date | Pass | Fail | Skip | CI Link |
 |---|---|---|---|---|---|
-| E2E (@P0-@P3, full suite) | 2026-08-26 | 150 | 0 | 6 (`test.fixme()` - DEF-001/002/003) | local (`qa/07-automation/e2e`, not yet pushed to CI) |
+| E2E (@P0-@P3, full suite) | 2026-08-26 | 150 | 0 | 6 (`test.fixme()` - DEF-001/002/003) | [GitHub Actions run](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001) |
 
 > Update this table after each significant run. The CI Link is a GitHub Actions run URL
 > (`.github/workflows/qa-e2e.yml`) or a path to a local report file.
@@ -98,7 +98,22 @@ Checklist (completed):
 - [x] {Task 2}
 -->
 
-_No sprints completed yet._
+### Sprint 1 — CAT + CARR Regression Baseline (2026-08-26)
+
+**Submodules**: CAT/LISTADO, CAT/DETALLE, CARR/CARRITO
+**TCs automated**: 32 P0 + 124 P1-P3 = 156 total (150 pass + 6 `test.fixme()` for DEF-001/002/003)
+**Execution report**: local Playwright HTML report (gitignored) + [CI run](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001) (150 passed, 6 skipped)
+
+Checklist (completed):
+- [x] Stage 1 (`qa-module-analysis`): CAT/LISTADO, CAT/DETALLE, CARR/CARRITO analyzed via live exploration. Found DEF-001, DEF-002.
+- [x] Stage 2 (`qa-spec-generation`): 4 business rules + 1 error-path workflow formalized in CAT; CARR unchanged.
+- [x] Stage 3 (`qa-test-plan`): Plan de Pruebas Sprint 1 for CAT (105 TCs) and CARR (55 TCs).
+- [x] Stage 5 (`qa-automation`), first pass: 32/32 P0 TCs automated, all gates green.
+- [x] Stage 5, second pass: 124 P1-P3 TCs automated (156 total). Found DEF-003.
+- [x] Confirmed `qa-e2e.yml` (CI) passes green on a real push to `main` — repo created at `keber/QA-UnicorntStore-refactor`, [run succeeded](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001) (150 passed, 6 skipped, lint + tsc clean).
+- [x] Business decision on the 4 `Bloqueado` TCs (Tazón category; detail variants/reviews/related products): **confirmed out of scope** — documented as permanently blocked pending feature implementation, not automated further.
+
+_No other sprints completed yet._
 
 ---
 

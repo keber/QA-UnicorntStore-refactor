@@ -13,7 +13,8 @@
 All 101 automated TCs (18 P0 + 83 P1-P3, 3 of them `test.fixme()`-tagged for DEF-001/DEF-003)
 pass `tsc --noEmit` and a live run against `{QA_BASE_URL}` (2 consecutive green runs, 0 flake).
 The 4 `Bloqueado` TCs (features absent from the current app - see the Plan de Pruebas Sección 8)
-are out of scope pending business confirmation.
+are confirmed out of scope by business decision (2026-08-26) - revisit only if these features
+are ever implemented.
 
 > Note: the first-pass version of this table double-counted `DETALLE`'s `Bloqueado` row (listed
 > 4, actually 3: TC-CAT-DETALLE-050/051/052 - TC-CAT-DETALLE-053 is `Automatizado`, not
