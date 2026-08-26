@@ -68,3 +68,23 @@
 - **Behavior observado**: La suma se persiste sin clamping (ej. `99 + 1 = 100`).
 - **Notes**: Mismo defecto raíz que RN-CAT-004 (listado) y RN-CAT-010 (detalle, entrada nueva).
   Ver DEF-001.
+
+### RN-CAT-015: El selector de cantidad del detalle no persiste entre recargas
+
+- **Type**: State Machine
+- **Trigger**: Recargar `product.html?id={id}` después de haber ajustado la cantidad (sin hacer
+  click en "Agregar al carrito")
+- **Behavior**: El input de cantidad vuelve a su valor inicial (`1`) tras el reload. Solo el
+  contenido de `unicornt_cart` persiste entre cargas — la selección de cantidad en pantalla es
+  estado efímero de la página, no se guarda en ningún lado.
+- **Notes**: Verificado incrementando la cantidad a un valor >1 y recargando.
+
+### RN-CAT-016: El detalle reutiliza el mismo componente de toast y badge que el listado
+
+- **Type**: Integration
+- **Trigger**: Click en "Agregar al carrito" desde el detalle
+- **Behavior**: Se dispara el mismo toast `#cart-toast` (mensaje `"¡Producto agregado al
+  carrito!"`, estilo éxito) y se actualiza el mismo badge del botón "Carrito" del navbar que en
+  el listado — no existen componentes ni mensajes distintos por página.
+- **Notes**: Confirma que CAT/LISTADO y CAT/DETALLE comparten la misma capa de UI de carrito
+  (`assets/js/cart.js`), consistente con `qa/memory/arquitectura-unicornstore-2026-08-26.md`.

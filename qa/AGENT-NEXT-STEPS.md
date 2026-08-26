@@ -6,9 +6,9 @@
 
 | Módulo | Submódulo | Specs | Plan | Automatización | Estado |
 |---|---|---|---|---|---|
-| CAT (Catálogo) | LISTADO | ✅ (50 TC) | ⬜ | ⬜ | ✅ Stage 1 completo (POM base ya existe: `page-objects/CatalogPage.ts`) |
-| CAT (Catálogo) | DETALLE | ✅ (55 TC) | ⬜ | ⬜ | ✅ Stage 1 completo |
-| CARR (Carrito) | CARRITO | ✅ (55 TC) | ⬜ | ⬜ | ✅ Stage 1 completo |
+| CAT (Catálogo) | LISTADO | ✅ (50 TC) | ⬜ | ⬜ | ✅ Stage 2 completo (POM base ya existe: `page-objects/CatalogPage.ts`) |
+| CAT (Catálogo) | DETALLE | ✅ (55 TC) | ⬜ | ⬜ | ✅ Stage 2 completo |
+| CARR (Carrito) | CARRITO | ✅ (55 TC) | ⬜ | ⬜ | ✅ Stage 2 completo |
 
 Setup del framework y del harness de automatización (`qa/07-automation/e2e/`) completo y verificado — ver `qa/README.md`.
 
@@ -16,7 +16,7 @@ Setup del framework y del harness de automatización (`qa/07-automation/e2e/`) c
 
 - [x] **Stage 1** (`qa-module-analysis` skill): CAT/LISTADO y CAT/DETALLE analizados con exploración en vivo (playwright-cli) el 2026-08-26. Specs en `qa/01-specifications/module-catalogo/`. Se encontró 1 defecto (`DEF-001`, límite de cantidad no respetado al agregar) — ver `qa/06-defects/open/`.
 - [x] Idem para CARR/CARRITO: analizado el 2026-08-26. Specs en `qa/01-specifications/module-carrito/`. Se encontró 1 defecto adicional (`DEF-002`, entrada de carrito con producto inexistente deja la UI inconsistente).
-- [ ] **Stage 2** (`qa-spec-generation`): revisar/formalizar los 6 archivos de spec por submódulo ya producidos por Stage 1 (CAT y CARR, los 3 submódulos).
+- [x] **Stage 2** (`qa-spec-generation`): revisado los 6 archivos de spec por submódulo (CAT y CARR, los 3 submódulos) el 2026-08-26. Se formalizaron 4 business rules adicionales en CAT (RN-CAT-013 a RN-CAT-016) y 1 workflow de rama de error que faltaba en LISTADO (FL-CAT-005); CARR ya cumplía el rango típico de RN/FL sin cambios. TC count sin cambios (50/55/55).
 - [ ] **Stage 3** (`qa-test-plan`): Plan de Pruebas Sprint 1.
 - [ ] **Stage 5** (`qa-automation`): automatizar P0 primero. Recordar el gate de Step 5 (`tsc --noEmit` + smoke run) antes de cerrar.
 

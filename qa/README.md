@@ -11,9 +11,9 @@
 
 | Module | Submodule | TCs Total | TCs Automated | Plan | Status | Last Run |
 |---|---|---|---|---|---|---|
-| CAT (Catálogo) | LISTADO | 50 | 0 | ⬜ | ✅ Stage 1 done | — |
-| CAT (Catálogo) | DETALLE | 55 | 0 | ⬜ | ✅ Stage 1 done | — |
-| CARR (Carrito) | CARRITO | 55 | 0 | ⬜ | ✅ Stage 1 done | — |
+| CAT (Catálogo) | LISTADO | 50 | 0 | ⬜ | ✅ Stage 2 done | — |
+| CAT (Catálogo) | DETALLE | 55 | 0 | ⬜ | ✅ Stage 2 done | — |
+| CARR (Carrito) | CARRITO | 55 | 0 | ⬜ | ✅ Stage 2 done | — |
 
 **Legend**: ✅ Done · ⚠️ Partial · 🔲 Not started · ⛔ Blocked
 

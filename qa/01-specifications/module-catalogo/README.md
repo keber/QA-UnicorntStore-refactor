@@ -1,8 +1,12 @@
 # MODULE: Catálogo (CAT)
 
 > Stage 1 (module analysis) completado 2026-08-26 vía exploración en vivo con `playwright-cli`
-> contra `https://unicornt-store.keber.cl`. Ver `qa/memory/arquitectura-unicornstore-2026-08-26.md`
-> para el contexto de arquitectura completo (app front-end puro, sin login/API).
+> contra `https://unicornt-store.keber.cl`. Stage 2 (`qa-spec-generation`) revisado el mismo día:
+> se formalizaron 4 business rules adicionales (RN-CAT-013 a RN-CAT-016, ver los archivos
+> `01-business-rules.md` de cada submódulo) y el workflow de rama de error del límite máximo en
+> LISTADO (FL-CAT-005) que faltaba para cumplir la cobertura obligatoria de "error path". Ver
+> `qa/memory/arquitectura-unicornstore-2026-08-26.md` para el contexto de arquitectura completo
+> (app front-end puro, sin login/API).
 
 ## Submódulos
 
@@ -32,6 +36,5 @@
 
 ## Próximos pasos
 
-- Submódulo CARR/CARRITO (Carrito de compras) — pendiente, ver `qa/AGENT-NEXT-STEPS.md`.
-- Stage 2 (`qa-spec-generation`) puede iniciar sobre estos dos submódulos una vez CARR esté
-  también analizado, o en paralelo si el sprint lo permite.
+- Stage 3 (`qa-test-plan`): Plan de Pruebas Sprint 1, junto con CARR/CARRITO (ya analizado, ver
+  `qa/01-specifications/module-carrito/`).

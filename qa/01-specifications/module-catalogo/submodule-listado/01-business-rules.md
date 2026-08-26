@@ -59,4 +59,26 @@
 - **Trigger**: Renderizado de cada tarjeta
 - **Behavior**: Todos los precios se muestran en formato `"$XX.990"` (CLP, punto como separador
   de miles, sin decimales). Rango observado: `$11.990` a `$15.990`.
-- **Notes**: El mismo formato se usa en el total del carrito (ver CARR, análisis pendiente).
+- **Notes**: El mismo formato se usa en el total del carrito — ver
+  `qa/01-specifications/module-carrito/submodule-carrito/01-business-rules.md` RN-CARR-002.
+
+### RN-CAT-013: Visibilidad del badge de conteo del carrito
+
+- **Type**: State Machine
+- **Trigger**: Cualquier cambio en `unicornt_cart` (agregar, y por extensión editar/eliminar
+  desde el carrito, ver CARR)
+- **Behavior**: El botón "Carrito" del navbar muestra un badge numérico solo cuando la suma total
+  de `qty` en `unicornt_cart` es ≥ 1. Con el carrito vacío, el botón muestra únicamente el texto
+  "Carrito", sin badge.
+- **Notes**: Verificado agregando el primer producto (badge aparece en "1") y también en estado
+  inicial con carrito vacío (sin badge).
+
+### RN-CAT-014: Continuidad de los `id` de producto entre el listado y el catálogo fuente
+
+- **Type**: State Machine
+- **Trigger**: Renderizado del listado completo
+- **Behavior**: El `id` usado en el `href` de "Ver más" de cada tarjeta es secuencial de 1 a 49,
+  sin saltos ni repeticiones, en el mismo orden en que se renderizan las tarjetas.
+- **Notes**: Relevante para diseñar TCs de boundary sobre `product.html?id=` (ver
+  `submodule-detalle/01-business-rules.md` RN-CAT-007) — el rango válido conocido es exactamente
+  1–49.

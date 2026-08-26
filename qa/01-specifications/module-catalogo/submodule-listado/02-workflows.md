@@ -65,3 +65,37 @@ seguir agregando más productos o abrir el carrito (offcanvas, ver CARR).
 
 **Postcondition**: El estado del carrito (si existía) se mantiene sin cambios; la navegación es
 puramente de lectura.
+
+---
+
+### FL-CAT-005: Agregar un producto que ya está en el límite máximo (rama de error/defecto)
+
+**Actor**: Visitante
+**Trigger**: Click en "Agregar" sobre un producto cuya entrada en `unicornt_cart` ya tiene
+`qty=99`
+**Precondition**: `unicornt_cart` = `[{"id": N, "qty": 99}]` para el producto N
+
+**Flow**:
+```
+[Start: producto N ya en el carrito con qty=99]
+    │
+    ▼
+[Click en "Agregar" de la tarjeta del producto N]
+    │
+    ▼
+[DEFECTO: no se valida el límite máximo antes de incrementar] (RN-CAT-004)
+    │
+    ▼
+[unicornt_cart pasa a {"id": N, "qty": 100}]
+    │
+    ▼
+[Toast de éxito aparece igual que en el happy path — sin ninguna advertencia]
+    │
+    ▼
+[End: el carrito queda con una cantidad por sobre el máximo declarado, sin que el usuario
+ reciba ningún indicio del problema]
+```
+
+**Postcondition**: Estado inconsistente respecto al límite declarado (`max="99"`) hasta que se
+corrija `DEF-001`. Ver también la rama gemela desde el detalle: `submodule-detalle/02-workflows.md`
+FL-CAT-004b.

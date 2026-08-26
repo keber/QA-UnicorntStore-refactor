@@ -1,4 +1,4 @@
-# Session Summary — 2026-08-26 (Stage 1: CAT + CARR)
+# Session Summary — 2026-08-26 (Stage 1 + Stage 2: CAT + CARR)
 
 ## Modules analyzed
 
@@ -29,11 +29,23 @@ confirmar directamente al automatizar (Stage 5). Algunos quedaron `PENDING-CODE`
 "Tazón", variantes de producto, reseñas, productos relacionados) porque esas features no existen
 en la app actual.
 
+## Stage 2 review (same session)
+
+Se revisaron los 6 archivos de spec de los 3 submódulos contra las reglas de
+`qa-spec-generation`. Cambios aplicados:
+
+- CAT/LISTADO: +2 business rules (RN-CAT-013 visibilidad del badge, RN-CAT-014 continuidad de
+  `id` 1–49) y +1 workflow de rama de error (FL-CAT-005, agregar sobre un ítem ya en el máximo).
+- CAT/DETALLE: +2 business rules (RN-CAT-015 el selector de cantidad no persiste entre recargas,
+  RN-CAT-016 reuso de toast/badge con el listado).
+- CARR/CARRITO: revisado, ya cumplía el rango típico de RN (11) y las 3 ramas de workflow
+  obligatorias (happy path, cancelación, error) — sin cambios.
+- Ningún TC nuevo fue necesario: las reglas agregadas ya estaban cubiertas por TCs existentes de
+  Stage 1, solo faltaba formalizarlas como RN/FL.
+
 ## Next steps
 
-1. Stage 2 (`qa-spec-generation`) para formalizar/revisar los 6 archivos de spec de los 3
-   submódulos (CAT/LISTADO, CAT/DETALLE, CARR/CARRITO).
-2. Stage 3 (`qa-test-plan`): Plan de Pruebas Sprint 1, cubriendo ambos módulos.
-3. Decidir con negocio/dev si DEF-001 y DEF-002 se corrigen antes de automatizar los TCs
+1. Stage 3 (`qa-test-plan`): Plan de Pruebas Sprint 1, cubriendo ambos módulos.
+2. Decidir con negocio/dev si DEF-001 y DEF-002 se corrigen antes de automatizar los TCs
    afectados, o si se automatizan documentando el comportamiento actual con `test.fixme()`.
-4. Stage 5 (`qa-automation`): automatizar P0 primero una vez exista el Plan de Pruebas.
+3. Stage 5 (`qa-automation`): automatizar P0 primero una vez exista el Plan de Pruebas.
