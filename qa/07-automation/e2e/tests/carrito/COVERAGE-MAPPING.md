@@ -4,69 +4,69 @@
 
 ## Summary
 
-| Submódulo | Total | Automated (@P0) | Bloqueado (PENDING-CODE) | Pending (P1-P3) |
+| Submódulo | Total | Automated (@P0) | Automated (@P1-P3) | Bloqueado (PENDING-CODE) |
 |---|---|---|---|---|
-| CARRITO | 55 | 14 | 0 | 41 |
+| CARRITO | 55 | 14 | 41 | 0 |
 
-All 14 P0 TCs pass `tsc --noEmit` and a live smoke run against `{QA_BASE_URL}` (2 consecutive
-green runs, 0 flake). P1-P3 automation is a later pass — see `qa/AGENT-NEXT-STEPS.md`.
+All 55 automated TCs (14 P0 + 41 P1-P3, 2 of them `test.fixme()`-tagged for DEF-002) pass
+`tsc --noEmit` and a live run against `{QA_BASE_URL}` (2 consecutive green runs, 0 flake).
 
 ## CARRITO
 
 | TC ID | Title | Spec file | Playwright spec | Status |
 |-------|-------|-----------|----------------|--------|
 | TC-CARR-CARRITO-001 | El botón "Carrito" abre el offcanvas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-002 | El offcanvas muestra el título "Tu carrito" con ícono | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
+| TC-CARR-CARRITO-002 | El offcanvas muestra el título "Tu carrito" con ícono | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P3) |
 | TC-CARR-CARRITO-003 | El botón "Cerrar" (X) cierra el offcanvas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-004 | Presionar Escape cierra el offcanvas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-005 | Click en el backdrop cierra el offcanvas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
+| TC-CARR-CARRITO-004 | Presionar Escape cierra el offcanvas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-005 | Click en el backdrop cierra el offcanvas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-006 | Con carrito vacío se muestra el mensaje de "carrito vacío" | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
 | TC-CARR-CARRITO-007 | Con carrito vacío el footer (Total + acciones) está oculto | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
 | TC-CARR-CARRITO-008 | Una línea de producto muestra imagen, nombre y precio unitario | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
 | TC-CARR-CARRITO-009 | La línea muestra el subtotal = precio unitario × cantidad | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
 | TC-CARR-CARRITO-010 | El total es la suma de los subtotales de todas las líneas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-011 | El total se recalcula al cambiar una cantidad | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
+| TC-CARR-CARRITO-011 | El total se recalcula al cambiar una cantidad | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-012 | El botón "+" incrementa la cantidad en 1 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
 | TC-CARR-CARRITO-013 | El botón "−" decrementa la cantidad en 1 (qty > 1) | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-014 | El botón "−" en qty=1 elimina la línea completa | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-015 | El botón "+" no incrementa por sobre 99 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-016 | Editar manualmente a un valor válido actualiza la cantidad | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-017 | Editar manualmente a `0` sanea a 1 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-018 | Editar manualmente a un valor negativo sanea a 1 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-019 | Editar manualmente a vacío sanea a 1 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-020 | Editar manualmente a un valor > 99 clampea a 99 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
+| TC-CARR-CARRITO-014 | El botón "−" en qty=1 elimina la línea completa | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-015 | El botón "+" no incrementa por sobre 99 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-016 | Editar manualmente a un valor válido actualiza la cantidad | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-017 | Editar manualmente a `0` sanea a 1 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-018 | Editar manualmente a un valor negativo sanea a 1 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-019 | Editar manualmente a vacío sanea a 1 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-020 | Editar manualmente a un valor > 99 clampea a 99 | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-021 | "Eliminar" quita la línea completa | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-022 | "Eliminar" no requiere confirmación | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
+| TC-CARR-CARRITO-022 | "Eliminar" no requiere confirmación | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
 | TC-CARR-CARRITO-023 | "Vaciar carrito" elimina todas las líneas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-024 | "Vaciar carrito" no requiere confirmación | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-025 | Tras vaciar el carrito, vuelve el estado vacío | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-026 | El badge desaparece tras vaciar el carrito | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
+| TC-CARR-CARRITO-024 | "Vaciar carrito" no requiere confirmación | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-025 | Tras vaciar el carrito, vuelve el estado vacío | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-026 | El badge desaparece tras vaciar el carrito | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-027 | "Finalizar compra" vacía el carrito | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-028 | "Finalizar compra" cierra el offcanvas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
+| TC-CARR-CARRITO-028 | "Finalizar compra" cierra el offcanvas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-029 | "Finalizar compra" muestra el toast de agradecimiento | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-030 | "Finalizar compra" no genera número de orden ni confirmación | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
+| TC-CARR-CARRITO-030 | "Finalizar compra" no genera número de orden ni confirmación | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-031 | "Finalizar compra" no persiste ni envía la "compra" a ningún lado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-032 | El carrito con múltiples ítems distintos renderiza todas las líneas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-033 | El carrito es idéntico entre `index.html` y `product.html` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-034 | El carrito persiste tras recargar la página | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-035 | [DEFECTO] Entrada con producto inexistente deja la UI inconsistente | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-036 | [DEFECTO derivado] "Finalizar compra" se completa sobre un carrito solo con entrada inválida | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-037 | La imagen de cada línea tiene `alt` igual al nombre del producto | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-038 | El precio unitario incluye el sufijo "c/u" | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-039 | El formato de precio es consistente con listado/detalle | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-040 | El botón "Eliminar" tiene `aria-label="Eliminar"` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-041 | Los botones +/- tienen `aria-label` "Reducir"/"Aumentar" | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-042 | El input de cantidad tiene `aria-label="Cantidad"` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-043 | El offcanvas expone `role="dialog"` y `aria-modal="true"` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-044 | El badge se muestra solo cuando hay al menos 1 unidad total | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-045 | El badge cuenta unidades totales, no líneas distintas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-046 | Dos líneas con cantidades 2 y 5 resultan en badge "7" | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-047 | `#cart-items` tiene scroll propio cuando hay muchas líneas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-048 | No existe ningún paso de checkout real | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-049 | No hay llamadas de red al abrir/operar el carrito | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-050 | Abrir el carrito no cambia la URL de la página | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-051 | El botón "Carrito" es accesible por teclado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-052 | Los controles de cada línea son accesibles por teclado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-053 | Cerrar y reabrir el offcanvas mantiene el estado actualizado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-054 | Vaciar el carrito actualiza el badge en la misma pestaña sin recargar | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
-| TC-CARR-CARRITO-055 | El total muestra `$0` cuando el carrito solo tiene entradas inválidas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🔲 Pending (P1-P3) |
+| TC-CARR-CARRITO-032 | El carrito con múltiples ítems distintos renderiza todas las líneas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-033 | El carrito es idéntico entre `index.html` y `product.html` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-034 | El carrito persiste tras recargar la página | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-035 | [DEFECTO] Entrada con producto inexistente deja la UI inconsistente | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ⏸ Automatizado (`test.fixme()` - DEF-002) @P2 |
+| TC-CARR-CARRITO-036 | [DEFECTO derivado] "Finalizar compra" se completa sobre un carrito solo con entrada inválida | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ⏸ Automatizado (`test.fixme()` - DEF-002) @P2 |
+| TC-CARR-CARRITO-037 | La imagen de cada línea tiene `alt` igual al nombre del producto | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-038 | El precio unitario incluye el sufijo "c/u" | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P3) |
+| TC-CARR-CARRITO-039 | El formato de precio es consistente con listado/detalle | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-040 | El botón "Eliminar" tiene `aria-label="Eliminar"` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-041 | Los botones +/- tienen `aria-label` "Reducir"/"Aumentar" | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-042 | El input de cantidad tiene `aria-label="Cantidad"` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P3) |
+| TC-CARR-CARRITO-043 | El offcanvas expone `role="dialog"` y `aria-modal="true"` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-044 | El badge se muestra solo cuando hay al menos 1 unidad total | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-045 | El badge cuenta unidades totales, no líneas distintas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-046 | Dos líneas con cantidades 2 y 5 resultan en badge "7" | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-047 | `#cart-items` tiene scroll propio cuando hay muchas líneas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P3) |
+| TC-CARR-CARRITO-048 | No existe ningún paso de checkout real | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-049 | No hay llamadas de red al abrir/operar el carrito | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-050 | Abrir el carrito no cambia la URL de la página | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-051 | El botón "Carrito" es accesible por teclado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-052 | Los controles de cada línea son accesibles por teclado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-053 | Cerrar y reabrir el offcanvas mantiene el estado actualizado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
+| TC-CARR-CARRITO-054 | Vaciar el carrito actualiza el badge en la misma pestaña sin recargar | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-055 | El total muestra `$0` cuando el carrito solo tiene entradas inválidas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P3) |

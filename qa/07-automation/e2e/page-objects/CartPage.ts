@@ -24,7 +24,10 @@ export class CartPage {
   // ==================== Locators ====================
 
   get openButton(): Locator {
-    return this.page.getByRole('button', { name: 'Carrito' });
+    // Unscoped, this would also match "Agregar al carrito" (detail page) and "Vaciar carrito"
+    // (own footer, once populated) - both contain "carrito" as a case-insensitive substring.
+    // The navbar "Carrito" button is present identically on every page (index.html/product.html).
+    return this.page.getByRole('banner').getByRole('button', { name: 'Carrito' });
   }
 
   get badge(): Locator {
@@ -35,6 +38,16 @@ export class CartPage {
 
   get dialog(): Locator {
     return this.page.getByRole('dialog', { name: 'Tu carrito' });
+  }
+
+  get dialogTitle(): Locator {
+    return this.dialog.getByRole('heading', { level: 5, name: 'Tu carrito' });
+  }
+
+  get backdrop(): Locator {
+    // Bootstrap-generated overlay element, no ARIA role of its own.
+    // eslint-disable-next-line playwright/no-raw-locators
+    return this.page.locator('.offcanvas-backdrop');
   }
 
   get closeButton(): Locator {

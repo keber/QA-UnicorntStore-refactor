@@ -3,11 +3,13 @@
  * @submodule CARRITO
  * @spec qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md
  * @plan qa/02-test-plans/sprints/Sprint-001/Plan-de-Pruebas-QA-UnicorntStore-refactor-Sprint-001-CARR.md
- * @priority P0
+ * @priority P0-P3
  *
- * P0 only (Stage 5, first automation pass). P1-P3 follow in a later pass; see the Plan de
- * Pruebas for the full TC list and suite grouping. DEF-002 (orphaned cart entry leaves the
- * UI inconsistent) is tracked separately by P2 tests, not exercised here.
+ * P0 (Stage 5 first pass) + P1-P3 (Stage 5 second pass, 2026-08-26). TC-CARR-CARRITO-035/036
+ * are `test.fixme()`-tagged for DEF-002 (a cart entry whose product id no longer exists in the
+ * catalog leaves the offcanvas UI inconsistent - see qa/06-defects/open/DEF-002-*.md).
+ * TC-CARR-CARRITO-055 documents the current ($0 total) symptom directly, no fixme needed per
+ * the Plan de Pruebas' own note (Sección 8).
  *
  * Cart state is seeded directly via `cartPage.setCart()` + reload rather than through the
  * "Agregar" flow on the catalog pages, to keep these tests independent of DEF-001.
@@ -195,6 +197,555 @@ test.describe('carrito de compras (offcanvas)', () => {
       expect(apiRequests).toHaveLength(0);
       const storageKeys = await page.evaluate(() => Object.keys(localStorage));
       expect(storageKeys.some((k) => /orden|pedido|compra|order/i.test(k))).toBe(false);
+    }
+  );
+
+  // ==================== P1-P3 (Stage 5, second pass) ====================
+
+  test(
+    '[TC-CARR-CARRITO-002] El offcanvas muestra el título "Tu carrito" con ícono',
+    { tag: '@P3' },
+    async ({ cartPage }) => {
+      await cartPage.open();
+      await expect(cartPage.dialogTitle).toBeVisible();
+      // Decorative icon, no ARIA role of its own - existence check only.
+      // eslint-disable-next-line playwright/no-raw-locators
+      await expect(cartPage.dialog.locator('.fa-cart-shopping')).toBeVisible();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-004] Presionar Escape cierra el offcanvas',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.open();
+      // Bootstrap's offcanvas Escape handler only acts once its open transition finishes
+      // (`showing` -> `show`) - pressing Escape mid-transition is a no-op.
+      await expect(cartPage.dialog).toHaveClass(/\bshow\b/);
+      await page.keyboard.press('Escape');
+      await expect(cartPage.dialog).toBeHidden();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-005] Click en el backdrop cierra el offcanvas',
+    { tag: '@P1' },
+    async ({ cartPage }) => {
+      await cartPage.open();
+      // The offcanvas panel is `offcanvas-end` (docked right); (5, 5) is outside it.
+      await cartPage.backdrop.click({ position: { x: 5, y: 5 } });
+      await expect(cartPage.dialog).toBeHidden();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-011] El total se recalcula al cambiar una cantidad',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.total).toHaveText('$13.990');
+      await cartPage.increaseButton(1).click();
+      await expect(cartPage.total).toHaveText('$27.980');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-014] El botón "−" en qty=1 elimina la línea completa',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([
+        { id: 1, qty: 2 },
+        { id: 2, qty: 1 },
+      ]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.decreaseButton(2).click();
+      await expect(cartPage.itemRow(2)).toHaveCount(0);
+      expect(await cartPage.getCart()).toEqual([{ id: 1, qty: 2 }]);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-015] El botón "+" no incrementa por sobre 99',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 99 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.increaseButton(1).click();
+      expect(await cartPage.getCart()).toEqual([{ id: 1, qty: 99 }]);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-016] Editar manualmente a un valor válido actualiza la cantidad',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.qtyInput(1).fill('25');
+      await cartPage.qtyInput(1).press('Tab');
+      expect(await cartPage.getCart()).toEqual([{ id: 1, qty: 25 }]);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-017] Editar manualmente a 0 sanea a 1',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 5 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.qtyInput(1).fill('0');
+      await cartPage.qtyInput(1).press('Tab');
+      expect(await cartPage.getCart()).toEqual([{ id: 1, qty: 1 }]);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-018] Editar manualmente a un valor negativo sanea a 1',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 5 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.qtyInput(1).fill('-5');
+      await cartPage.qtyInput(1).press('Tab');
+      expect(await cartPage.getCart()).toEqual([{ id: 1, qty: 1 }]);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-019] Editar manualmente a vacío sanea a 1',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 5 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.qtyInput(1).fill('');
+      await cartPage.qtyInput(1).press('Tab');
+      expect(await cartPage.getCart()).toEqual([{ id: 1, qty: 1 }]);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-020] Editar manualmente a un valor > 99 clampea a 99',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 5 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.qtyInput(1).fill('500');
+      await cartPage.qtyInput(1).press('Tab');
+      expect(await cartPage.getCart()).toEqual([{ id: 1, qty: 99 }]);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-022] "Eliminar" no requiere confirmación',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      let dialogShown = false;
+      page.on('dialog', (dialog) => {
+        dialogShown = true;
+        void dialog.dismiss();
+      });
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.removeButton(1).click();
+      await expect(cartPage.emptyMessage).toBeVisible();
+      expect(dialogShown).toBe(false);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-024] "Vaciar carrito" no requiere confirmación',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      let dialogShown = false;
+      page.on('dialog', (dialog) => {
+        dialogShown = true;
+        void dialog.dismiss();
+      });
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.clearButton.click();
+      await expect(cartPage.emptyMessage).toBeVisible();
+      expect(dialogShown).toBe(false);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-025] Tras vaciar el carrito, vuelve el estado vacío',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.clearButton.click();
+      await expect(cartPage.emptyMessage).toBeVisible();
+      await expect(cartPage.footer).toBeHidden();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-026] El badge desaparece tras vaciar el carrito',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.clearButton.click();
+      await expect(cartPage.badge).toBeHidden();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-028] "Finalizar compra" cierra el offcanvas',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.checkoutButton.click();
+      await expect(cartPage.dialog).toBeHidden();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-030] "Finalizar compra" no genera número de orden ni confirmación',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.checkoutButton.click();
+      await expect(cartPage.toast).toContainText('¡Gracias por tu compra!');
+      await expect(page.getByText(/n[uú]mero de orden|order id|pedido n[uú]mero/i)).toHaveCount(0);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-032] El carrito con múltiples ítems distintos renderiza todas las líneas',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([
+        { id: 1, qty: 2 },
+        { id: 2, qty: 1 },
+        { id: 3, qty: 3 },
+      ]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.itemRow(1)).toContainText('$27.980');
+      await expect(cartPage.itemRow(2)).toContainText('$14.990');
+      await expect(cartPage.itemRow(3)).toContainText('$41.970');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-033] El carrito es idéntico entre index.html y product.html',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 2 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.itemRow(1)).toContainText('$27.980');
+      await cartPage.close();
+      await page.goto('/product.html?id=5', { waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.itemRow(1)).toContainText('$27.980');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-034] El carrito persiste tras recargar la página',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 2 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.itemRow(1)).toContainText('$27.980');
+    }
+  );
+
+  test.fixme(
+    '[TC-CARR-CARRITO-035] Entrada con producto inexistente deja la UI inconsistente (DEF-002)',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 9999, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      // Expected (RN-CARR-009): el sistema debería tratar la entrada inválida como si no
+      // existiera - mostrar el estado vacío ("El carrito está vacío.") y ocultar el footer.
+      // Actual (DEF-002): #cart-items no muestra ninguna línea NI el mensaje de vacío (el
+      // `.map()` de renderCart() produce "" para el producto no encontrado), el footer se
+      // muestra igual (display distinto de none) con Total "$0", y el badge muestra "1".
+      await expect(cartPage.emptyMessage).toBeVisible();
+      await expect(cartPage.footer).toBeHidden();
+    }
+  );
+
+  test.fixme(
+    '[TC-CARR-CARRITO-036] "Finalizar compra" se completa sobre un carrito solo con entrada inválida (DEF-002)',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 9999, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      // Expected (RN-CARR-009): el sistema debería impedir "finalizar" una compra sin ítems
+      // válidos - el footer/botón "Finalizar compra" no deberían estar disponibles para un
+      // carrito con solo la entrada inválida de TC-CARR-CARRITO-035.
+      // Actual (DEF-002): el footer se muestra igual, "Finalizar compra" se ejecuta con éxito
+      // (mismo toast que una compra real) y unicornt_cart pasa a [].
+      await expect(cartPage.checkoutButton).toBeHidden();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-037] La imagen de cada línea tiene alt igual al nombre del producto',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.itemRow(1).getByRole('img')).toHaveAttribute(
+        'alt',
+        "Polera 'I Can Explain It To You'"
+      );
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-038] El precio unitario incluye el sufijo "c/u"',
+    { tag: '@P3' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.itemRow(1)).toContainText('$13.990 c/u');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-039] El formato de precio es consistente con listado/detalle',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.itemRow(1)).toContainText('$13.990');
+      await cartPage.close();
+      await page.goto('/product.html?id=1', { waitUntil: 'domcontentloaded' });
+      await expect(page.getByText('$13.990')).toBeVisible();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-040] El botón "Eliminar" tiene aria-label="Eliminar"',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.removeButton(1)).toHaveAttribute('aria-label', 'Eliminar');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-041] Los botones +/- tienen aria-label "Reducir"/"Aumentar"',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.decreaseButton(1)).toHaveAttribute('aria-label', 'Reducir');
+      await expect(cartPage.increaseButton(1)).toHaveAttribute('aria-label', 'Aumentar');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-042] El input de cantidad tiene aria-label="Cantidad"',
+    { tag: '@P3' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.qtyInput(1)).toHaveAttribute('aria-label', 'Cantidad');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-043] El offcanvas expone role="dialog" y aria-modal="true"',
+    { tag: '@P2' },
+    async ({ cartPage }) => {
+      await cartPage.open();
+      await expect(cartPage.dialog).toHaveAttribute('aria-modal', 'true');
+      await expect(cartPage.dialog).toHaveAttribute('aria-labelledby', 'cartOffcanvasLabel');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-044] El badge se muestra solo cuando hay al menos 1 unidad total',
+    { tag: '@P1' },
+    async ({ cartPage }) => {
+      await expect(cartPage.badge).toBeHidden();
+      // See TC-CAT-LISTADO-030: assert no badge digit leaks into the name, not exact whitespace.
+      await expect(cartPage.openButton).not.toHaveAccessibleName(/\d/);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-045] El badge cuenta unidades totales, no líneas distintas',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([
+        { id: 1, qty: 2 },
+        { id: 2, qty: 5 },
+      ]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await expect(cartPage.badge).toHaveText('7');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-046] Dos líneas con cantidades 2 y 5 resultan en badge "7"',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([
+        { id: 1, qty: 2 },
+        { id: 2, qty: 5 },
+      ]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await expect(cartPage.badge).toHaveText('7');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-047] #cart-items tiene scroll propio cuando hay muchas líneas',
+    { tag: '@P3' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart(Array.from({ length: 12 }, (_, i) => ({ id: i + 1, qty: 1 })));
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      // `#cart-items` has no ARIA role of its own; `.overflow-auto` is the Bootstrap utility
+      // class that gives it its own scroll region (assets/js/cart.js renderCart() markup).
+      // eslint-disable-next-line playwright/no-raw-locators
+      await expect(page.locator('#cart-items.overflow-auto')).toBeVisible();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-048] No existe ningún paso de checkout real',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(page.getByRole('textbox', { name: /direcci[oó]n|env[ií]o/i })).toHaveCount(0);
+      await expect(page.getByText(/tarjeta|medio de pago|cup[oó]n/i)).toHaveCount(0);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-049] No hay llamadas de red al abrir/operar el carrito',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      const apiRequests: string[] = [];
+      page.on('request', (req) => {
+        if (req.url().includes('/api/')) apiRequests.push(req.url());
+      });
+      await cartPage.setCart([
+        { id: 1, qty: 1 },
+        { id: 2, qty: 1 },
+      ]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.increaseButton(1).click();
+      await cartPage.removeButton(2).click();
+      expect(apiRequests).toHaveLength(0);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-050] Abrir el carrito no cambia la URL de la página',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      const urlBefore = page.url();
+      await cartPage.open();
+      await expect(cartPage.dialog).toBeVisible();
+      expect(page.url()).toBe(urlBefore);
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-051] El botón "Carrito" es accesible por teclado',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.openButton.focus();
+      await page.keyboard.press('Enter');
+      await expect(cartPage.dialog).toBeVisible();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-052] Los controles de cada línea son accesibles por teclado',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      // Wait for the open transition to finish - Bootstrap's focus trap re-steals focus onto
+      // the offcanvas panel once it activates, which can swallow a focus() set mid-transition
+      // (same root cause as TC-CARR-CARRITO-004's Escape-key race).
+      await expect(cartPage.dialog).toHaveClass(/\bshow\b/);
+      await cartPage.increaseButton(1).focus();
+      await page.keyboard.press('Enter');
+      await expect(cartPage.qtyInput(1)).toHaveValue('2');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-053] Cerrar y reabrir el offcanvas mantiene el estado actualizado',
+    { tag: '@P2' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await cartPage.increaseButton(1).click();
+      await expect(cartPage.qtyInput(1)).toHaveValue('2');
+      await cartPage.close();
+      await cartPage.open();
+      await expect(cartPage.qtyInput(1)).toHaveValue('2');
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-054] Vaciar el carrito actualiza el badge en la misma pestaña sin recargar',
+    { tag: '@P1' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 1, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await expect(cartPage.badge).toHaveText('1');
+      await cartPage.open();
+      await cartPage.clearButton.click();
+      await expect(cartPage.badge).toBeHidden();
+    }
+  );
+
+  test(
+    '[TC-CARR-CARRITO-055] El total muestra $0 cuando el carrito solo tiene entradas inválidas',
+    { tag: '@P3' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 9999, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await cartPage.open();
+      await expect(cartPage.total).toHaveText('$0');
     }
   );
 });

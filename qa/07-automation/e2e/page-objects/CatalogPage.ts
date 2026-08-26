@@ -37,10 +37,45 @@ export class CatalogPage {
     return this.page.locator('#cart-badge');
   }
 
+  get skipLink(): Locator {
+    return this.page.getByRole('link', { name: 'Saltar al contenido principal' });
+  }
+
+  /** The `<header>` landmark (navbar) - scopes "Inicio"/"Contacto" away from their footer duplicates. */
+  get banner(): Locator {
+    return this.page.getByRole('banner');
+  }
+
+  get logoLink(): Locator {
+    return this.banner.getByRole('link', { name: "Unicorn't Store" });
+  }
+
+  get homeNavLink(): Locator {
+    return this.banner.getByRole('link', { name: 'Inicio' });
+  }
+
+  get contactNavLink(): Locator {
+    return this.banner.getByRole('link', { name: 'Contacto' });
+  }
+
+  /** The `<footer>` landmark. */
+  get footer(): Locator {
+    return this.page.getByRole('contentinfo');
+  }
+
   // ==================== Feedback Locators ====================
 
   get addedToCartToast(): Locator {
     return this.page.getByText('¡Producto agregado al carrito!');
+  }
+
+  /** `#cart-toast` exposes `role="alert"` - no raw CSS locator needed. */
+  get toast(): Locator {
+    return this.page.getByRole('alert');
+  }
+
+  get toastCloseButton(): Locator {
+    return this.toast.getByRole('button', { name: 'Cerrar' });
   }
 
   // ==================== Actions ====================

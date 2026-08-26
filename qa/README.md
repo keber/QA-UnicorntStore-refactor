@@ -11,9 +11,9 @@
 
 | Module | Submodule | TCs Total | TCs Automated | Plan | Status | Last Run |
 |---|---|---|---|---|---|---|
-| CAT (Catálogo) | LISTADO | 50 | 10 (@P0) | ✅ | ⚠️ Stage 5 in progress (P0 done) | 2026-08-26 (32/32 pass) |
-| CAT (Catálogo) | DETALLE | 55 | 8 (@P0) | ✅ | ⚠️ Stage 5 in progress (P0 done) | 2026-08-26 (32/32 pass) |
-| CARR (Carrito) | CARRITO | 55 | 14 (@P0) | ✅ | ⚠️ Stage 5 in progress (P0 done) | 2026-08-26 (32/32 pass) |
+| CAT (Catálogo) | LISTADO | 50 | 49 (10 @P0 + 39 @P1-P3, 1 Bloqueado) | ✅ | ✅ Stage 5 P0+P1-P3 done | 2026-08-26 (150/150 pass, 6 fixme) |
+| CAT (Catálogo) | DETALLE | 55 | 52 (8 @P0 + 44 @P1-P3, 3 Bloqueado) | ✅ | ✅ Stage 5 P0+P1-P3 done | 2026-08-26 (150/150 pass, 6 fixme) |
+| CARR (Carrito) | CARRITO | 55 | 55 (14 @P0 + 41 @P1-P3) | ✅ | ✅ Stage 5 P0+P1-P3 done | 2026-08-26 (150/150 pass, 6 fixme) |
 
 **Legend**: ✅ Done · ⚠️ Partial · 🔲 Not started · ⛔ Blocked
 
@@ -50,6 +50,7 @@ npx playwright test --last-failed
 |---|---|---|---|---|
 | DEF-001 | Límite máximo de cantidad (99) no se respeta al agregar al carrito | CAT/LISTADO, CAT/DETALLE | 2026-08-26 | Open (Low/P2) |
 | DEF-002 | Entrada de carrito con producto inexistente deja la UI inconsistente (sin filas ni mensaje de vacío, footer y "Finalizar compra" activos) | CARR/CARRITO | 2026-08-26 | Open (Low/P3) |
+| DEF-003 | `product.html` desborda horizontalmente (~12px) en viewport móvil de 375px (`.row.g-5` de `#product-content`) | CAT/DETALLE | 2026-08-26 | Open (Low/P3) |
 
 ---
 
@@ -57,7 +58,7 @@ npx playwright test --last-failed
 
 | Suite | Date | Pass | Fail | Skip | CI Link |
 |---|---|---|---|---|---|
-| E2E (@P0 local smoke) | 2026-08-26 | 32 | 0 | 0 | local (`qa/07-automation/e2e`, not yet pushed to CI) |
+| E2E (@P0-@P3, full suite) | 2026-08-26 | 150 | 0 | 6 (`test.fixme()` - DEF-001/002/003) | local (`qa/07-automation/e2e`, not yet pushed to CI) |
 
 > Update this table after each significant run. The CI Link is a GitHub Actions run URL
 > (`.github/workflows/qa-e2e.yml`) or a path to a local report file.
@@ -67,6 +68,7 @@ npx playwright test --last-failed
 | Date | Suite | Pass | Skip | Fail | Duration | Report |
 |---|---|---|---|---|---|---|
 | 2026-08-26 | `tests/catalogo tests/carrito` (@P0) | 32 | 0 | 0 | ~24s | `qa/07-automation/e2e/playwright-report/` (local, gitignored) |
+| 2026-08-26 | `tests/catalogo tests/carrito` (@P0-@P3, full suite) | 150 | 6 | 0 | ~90s (×2 consecutive runs, 0 flake) | `qa/07-automation/e2e/playwright-report/` (local, gitignored) |
 
 ## Flaky Tests
 

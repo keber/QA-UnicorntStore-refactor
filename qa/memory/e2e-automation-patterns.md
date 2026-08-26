@@ -88,3 +88,48 @@ por no ser parte del alcance de esta pasada; considerar alinearlo si se refactor
 
 "Eliminar" y "Vaciar carrito" ejecutan la acción inmediatamente sin `window.confirm()` ni modal
 — no hace falta manejar `page.on('dialog', ...)` en ningún test de CARR.
+
+## 7. Botones con ícono Font Awesome: accessible name "sucio" en Chromium (P1-P3 pass, 2026-08-26)
+
+Los botones/enlaces con un `<i class="fa-solid ...">` adyacente al texto (sin `aria-hidden`)
+exponen en Chromium un accessible name con un espacio y/o el glyph del ícono mezclado con el
+texto visible (ej. el botón "Carrito" del navbar resuelve como `" Carrito"`, con un espacio
+inicial). `textContent` (vía `toHaveText()`) **no** se ve afectado — el ícono es un
+`::before`/nodo `<i>` vacío, no aporta texto real al DOM.
+
+**Regla**: nunca usar `{ name: '...', exact: true }` en un botón/enlace con ícono adyacente —
+usar match por substring (el default de `getByRole`), o si lo que importa es la ausencia de un
+valor (ej. "sin badge numérico en el nombre"), usar `not.toHaveAccessibleName(/\d/)` en vez de
+comparar el string completo.
+
+## 8. `getByRole('button', { name: 'Carrito' })` sin `banner` matchea otros botones "...carrito"
+
+`getByRole` con un string hace match por substring case-insensitive por defecto. Un locator de
+"Carrito" (el botón del navbar) sin scope también matchea "Agregar al carrito" (detalle) y
+"Vaciar carrito" (footer del offcanvas, una vez poblado) — `strict mode violation` en cuanto
+ambos coexisten en la página. Todos los page objects de este proyecto (`CatalogPage.cartButton`,
+`ProductDetailPage.cartButton`, `CartPage.openButton`) scopean ahora el botón del navbar a
+`page.getByRole('banner')` primero.
+
+## 9. El offcanvas de Bootstrap ignora Escape/foco durante su transición de apertura
+
+`open()` solo dispara el click que inicia la transición `showing` → `show` (~300ms); interactuar
+inmediatamente después (Escape, o `.focus()` + `Enter` en un control interno) es una race
+condition silenciosa - Bootstrap activa su focus-trap recién al terminar la transición, robando
+el foco que se haya seteado antes. **Regla**: esperar `await expect(cartPage.dialog).toHaveClass(/\bshow\b/)`
+(no `showing`) antes de cualquier interacción de teclado dentro del offcanvas recién abierto. Un
+`.click()` normal no sufre esto — el auto-wait de actionability de Playwright ya espera a que el
+elemento esté "stable" (sin transición CSS en curso).
+
+## 10. Script de node para ediciones masivas de archivos: evitar regex con `\|` y backticks
+
+Al generar contenido vía un script de Node ejecutado por un LLM (no tipeado directamente por un
+humano), las secuencias de escape densas (`\\|`, `` \` ``) sobreviven de forma inconsistente el
+pipeline de transporte de la herramienta de shell — algunas se preservan, otras pierden un nivel
+de escaping silenciosamente, produciendo un regex roto sin ningún error (falla en ~4 de 124 filas
+sin lanzar excepción). **Regla**: para ediciones de archivo masivas y mecánicas (ej. actualizar
+una columna en decenas de filas de una tabla Markdown), usar operaciones de string simples
+(`split('|')`/`join('|')`, `indexOf`) en vez de regex con pipes/backticks escapados, y construir
+caracteres especiales vía `String.fromCharCode`/`String.fromCodePoint` en vez de literales
+embebidos. Verificar el conteo de filas cambiadas contra el esperado antes de confiar en el
+resultado.
