@@ -58,7 +58,7 @@ npx playwright test --last-failed
 
 | Suite | Date | Pass | Fail | Skip | CI Link |
 |---|---|---|---|---|---|
-| E2E (@P0-@P3, full suite) | 2026-08-26 | 150 | 0 | 6 (`test.fixme()` - DEF-001/002/003) | [GitHub Actions run](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001) |
+| E2E (@P0-@P3, full suite) | 2026-08-26 | 150 | 0 | 6 (`test.fixme()` - DEF-001/002/003) | [run 1](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001), [run 2](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33013887052) — both green, 0 flake |
 
 > Update this table after each significant run. The CI Link is a GitHub Actions run URL
 > (`.github/workflows/qa-e2e.yml`) or a path to a local report file.
