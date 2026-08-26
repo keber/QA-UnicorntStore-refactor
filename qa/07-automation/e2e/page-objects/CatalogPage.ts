@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 /**
  * @module CAT
  * @submodule LISTADO
- * @spec qa/01-specifications/module-catalogo/submodule-listado (pending Stage 2)
+ * @spec qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md
  *
  * Page Object for the home page / catalog listing (index.html, `#products`).
  * Observed live 2026-08-26 via playwright-cli:

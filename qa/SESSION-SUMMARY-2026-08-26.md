@@ -1,4 +1,4 @@
-# Session Summary — 2026-08-26 (Stage 1 + Stage 2 + Stage 3: CAT + CARR)
+# Session Summary — 2026-08-26 (Stage 1 + Stage 2 + Stage 3 + Stage 5 (P0): CAT + CARR)
 
 ## Modules analyzed
 
@@ -62,10 +62,43 @@ Reglas aplicadas: `[SMOKE]` solo para TCs `Type≠Negative` con `Priority=P0`; t
 Stage 1/2 quedaron representadas 1:1 en las tablas (verificado programáticamente, sin duplicados
 ni faltantes).
 
-## Next steps
+## Stage 5 — automatización P0 (same session)
 
-1. Decidir con negocio/dev si DEF-001 y DEF-002 se corrigen antes de automatizar los TCs
-   afectados, o si se automatizan documentando el comportamiento actual con `test.fixme()`.
-2. Stage 5 (`qa-automation`): automatizar P0 primero (18 en CAT, 14 en CARR) tomando las Tablas
-   de Pruebas de `qa/02-test-plans/sprints/Sprint-001/` como fuente, no las specs de Stage 1/2
-   directamente (regla del pipeline: no automatizar TCs fuera de un Plan de Pruebas activo).
+Decisión del usuario: DEF-001 y DEF-002 no se corrigen antes de automatizar. Se automatizaron
+las 32 TCs P0 (18 CAT + 14 CARR) tomando las Tablas de Pruebas del Plan de Pruebas Sprint 1 como
+fuente, no las specs de Stage 1/2 directamente.
+
+**Archivos nuevos**:
+- `page-objects/ProductDetailPage.ts`, `page-objects/CartPage.ts` (+ fixtures en
+  `fixtures/pom/page-object-fixture.ts`) — POM por submódulo, inyectados vía DI, sin
+  `new PageObject(page)` en los specs (Constitution MUST: Dependency Injection).
+- `tests/catalogo/listado.spec.ts` (10 TCs), `tests/catalogo/detalle.spec.ts` (8 TCs),
+  `tests/carrito/carrito.spec.ts` (14 TCs) — todas `@P0`, `import { test, expect } from
+  '../../fixtures/pom/test-options'`.
+- `tests/catalogo/COVERAGE-MAPPING.md`, `tests/carrito/COVERAGE-MAPPING.md` — las 160 TCs con su
+  estado (✅ Automated / 🔲 Pending / 🔲 Bloqueado).
+
+**Gates (todos verdes, Step 5 de `qa-automation`)**: `npx tsc --noEmit` (0 errores), `npm run
+lint` (0 warnings tras arreglar `no-raw-locators`, `prefer-lowercase-title`, `expect-expect` y
+formato Prettier), smoke run `npx playwright test tests/catalogo tests/carrito --project=chromium`
+32/32 en 2 corridas consecutivas (0 flake).
+
+**Hallazgo real corregido durante la automatización**: el toast de "Agregar al carrito" en
+DETALLE **no** repite el mensaje genérico del listado (`"¡Producto agregado al carrito!"`) —
+interpola el nombre del producto (`"¡Polera 'X' agregado al carrito!"`). Stage 1/2 lo había
+documentado como idéntico al del listado sin verificarlo byte a byte; el test automatizado lo
+hizo fallar y expuso el error. Corregido en:
+- `submodule-detalle/01-business-rules.md` (RN-CAT-016)
+- `submodule-detalle/05-test-scenarios.md` (TC-CAT-DETALLE-038)
+- La fila correspondiente del Plan de Pruebas CAT (fila 46)
+- `COVERAGE-MAPPING.md` de catálogo (título de TC-038 actualizado)
+
+Otro ajuste técnico descubierto: Playwright's regex-based `getByText()` matches the *raw*
+(non-trimmed) text content of candidate DOM nodes, not the whitespace-normalized version — a
+`^...$`-anchored regex against a `<p>` with surrounding newlines/indentation never matches.
+Fixed by dropping the anchors (substring match) instead of anchoring.
+
+**Pendiente**: automatizar P1-P3 (82 CAT + 41 CARR) en una pasada siguiente. Los 7 TCs ligados a
+DEF-001/DEF-002 (ver Sección 10 de cada Plan de Pruebas) van con `test.fixme()` cuando se
+automaticen. CI (`qa-e2e.yml`) corre lint + tsc + `playwright test` en cada push/PR a `main` —
+no se ha verificado ahí todavía, solo localmente.

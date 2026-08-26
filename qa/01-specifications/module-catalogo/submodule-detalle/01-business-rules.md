@@ -79,12 +79,19 @@
   estado efímero de la página, no se guarda en ningún lado.
 - **Notes**: Verificado incrementando la cantidad a un valor >1 y recargando.
 
-### RN-CAT-016: El detalle reutiliza el mismo componente de toast y badge que el listado
+### RN-CAT-016: El detalle reutiliza el mismo componente de toast que el listado, con un mensaje distinto
 
 - **Type**: Integration
 - **Trigger**: Click en "Agregar al carrito" desde el detalle
-- **Behavior**: Se dispara el mismo toast `#cart-toast` (mensaje `"¡Producto agregado al
-  carrito!"`, estilo éxito) y se actualiza el mismo badge del botón "Carrito" del navbar que en
-  el listado — no existen componentes ni mensajes distintos por página.
-- **Notes**: Confirma que CAT/LISTADO y CAT/DETALLE comparten la misma capa de UI de carrito
+- **Behavior**: Se dispara el mismo elemento `#cart-toast` (estilo éxito) y se actualiza el
+  mismo badge del botón "Carrito" del navbar que en el listado — mismo componente, misma capa
+  de UI. **El texto del mensaje es distinto**: el listado muestra el genérico
+  `"¡Producto agregado al carrito!"` (ver `submodule-listado/01-business-rules.md`
+  RN-CAT-002), mientras que el detalle interpola el nombre del producto:
+  `"¡{Nombre del producto} agregado al carrito!"` (ej. `"¡Polera 'I Can Explain It To You'
+  agregado al carrito!"` para id=1).
+- **Notes**: Corregido 2026-08-26 durante Stage 5 (automatización) — el texto exacto del
+  mensaje del detalle no se había verificado byte a byte en Stage 1 y se documentó
+  incorrectamente como idéntico al del listado hasta que un test automatizado lo hizo fallar.
+  Confirma que CAT/LISTADO y CAT/DETALLE comparten la misma capa de UI de carrito
   (`assets/js/cart.js`), consistente con `qa/memory/arquitectura-unicornstore-2026-08-26.md`.

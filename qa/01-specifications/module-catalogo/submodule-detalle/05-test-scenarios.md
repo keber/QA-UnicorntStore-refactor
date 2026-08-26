@@ -844,27 +844,31 @@ copyright).
 
 ---
 
-### TC-CAT-DETALLE-038: El toast de confirmación también aparece al agregar desde el detalle
+### TC-CAT-DETALLE-038: El toast de confirmación también aparece al agregar desde el detalle, con el nombre del producto interpolado
 
 | Field | Value |
 |-------|-------|
 | Priority | P1 |
 | Type | Functional |
 | Origin | UI-OBSERVED |
-| Automation | No |
-| Playwright | — |
+| Automation | Yes |
+| Playwright | `tests/catalogo/detalle.spec.ts` (via `ProductDetailPage.addToCart()`, verificación parcial dentro de los TCs P0; falta un TC P1 dedicado a la interpolación exacta) |
 
 **Preconditions**: Ninguna.
 
 **Steps**:
-1. Navegar al detalle de cualquier producto.
+1. Navegar al detalle del producto id=1.
 2. Click en "Agregar al carrito".
 3. Inspeccionar el DOM del toast.
 
-**Expected result**: El toast contiene `"¡Producto agregado al carrito!"`, mismo mensaje que en
-el listado.
+**Expected result**: El toast contiene `"¡Polera 'I Can Explain It To You' agregado al
+carrito!"` — el mismo componente `#cart-toast` que el listado, pero con un mensaje que
+interpola el nombre del producto (`"¡{Nombre del producto} agregado al carrito!"`), distinto
+del genérico `"¡Producto agregado al carrito!"` del listado.
 
-**Notes**: —
+**Notes**: Corregido 2026-08-26 durante Stage 5 — el texto exacto no se había verificado byte a
+byte en Stage 1 (se asumió igual al del listado sin confirmarlo) hasta que un test automatizado
+lo hizo fallar. Ver RN-CAT-016.
 
 ---
 

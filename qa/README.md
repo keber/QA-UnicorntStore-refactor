@@ -11,9 +11,9 @@
 
 | Module | Submodule | TCs Total | TCs Automated | Plan | Status | Last Run |
 |---|---|---|---|---|---|---|
-| CAT (Catálogo) | LISTADO | 50 | 0 | ✅ | ✅ Stage 3 done | — |
-| CAT (Catálogo) | DETALLE | 55 | 0 | ✅ | ✅ Stage 3 done | — |
-| CARR (Carrito) | CARRITO | 55 | 0 | ✅ | ✅ Stage 3 done | — |
+| CAT (Catálogo) | LISTADO | 50 | 10 (@P0) | ✅ | ⚠️ Stage 5 in progress (P0 done) | 2026-08-26 (32/32 pass) |
+| CAT (Catálogo) | DETALLE | 55 | 8 (@P0) | ✅ | ⚠️ Stage 5 in progress (P0 done) | 2026-08-26 (32/32 pass) |
+| CARR (Carrito) | CARRITO | 55 | 14 (@P0) | ✅ | ⚠️ Stage 5 in progress (P0 done) | 2026-08-26 (32/32 pass) |
 
 **Legend**: ✅ Done · ⚠️ Partial · 🔲 Not started · ⛔ Blocked
 
@@ -57,7 +57,7 @@ npx playwright test --last-failed
 
 | Suite | Date | Pass | Fail | Skip | CI Link |
 |---|---|---|---|---|---|
-| E2E | — | — | — | — | — |
+| E2E (@P0 local smoke) | 2026-08-26 | 32 | 0 | 0 | local (`qa/07-automation/e2e`, not yet pushed to CI) |
 
 > Update this table after each significant run. The CI Link is a GitHub Actions run URL
 > (`.github/workflows/qa-e2e.yml`) or a path to a local report file.
@@ -66,7 +66,7 @@ npx playwright test --last-failed
 
 | Date | Suite | Pass | Skip | Fail | Duration | Report |
 |---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — |
+| 2026-08-26 | `tests/catalogo tests/carrito` (@P0) | 32 | 0 | 0 | ~24s | `qa/07-automation/e2e/playwright-report/` (local, gitignored) |
 
 ## Flaky Tests
 
@@ -112,3 +112,5 @@ _No sprints completed yet._
 | CI Workflow | `.github/workflows/qa-e2e.yml` |
 | Architecture Findings | `qa/memory/arquitectura-unicornstore-2026-08-26.md` |
 | Sprint 001 Test Plans | `qa/02-test-plans/sprints/Sprint-001/` |
+| Coverage Mapping (CAT) | `qa/07-automation/e2e/tests/catalogo/COVERAGE-MAPPING.md` |
+| Coverage Mapping (CARR) | `qa/07-automation/e2e/tests/carrito/COVERAGE-MAPPING.md` |

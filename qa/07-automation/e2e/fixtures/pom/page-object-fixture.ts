@@ -1,5 +1,7 @@
 import { test as base } from '@playwright/test';
 import { CatalogPage } from '../../page-objects/CatalogPage';
+import { ProductDetailPage } from '../../page-objects/ProductDetailPage';
+import { CartPage } from '../../page-objects/CartPage';
 
 /**
  * Framework fixtures for page objects.
@@ -18,6 +20,8 @@ import { CatalogPage } from '../../page-objects/CatalogPage';
  */
 export type FrameworkFixtures = {
   catalogPage: CatalogPage;
+  productDetailPage: ProductDetailPage;
+  cartPage: CartPage;
   /** Clears the cart's localStorage key mid-test. Requires the page to have navigated once already. */
   clearCart: () => Promise<void>;
 };
@@ -25,6 +29,12 @@ export type FrameworkFixtures = {
 export const test = base.extend<FrameworkFixtures>({
   catalogPage: async ({ page }, use) => {
     await use(new CatalogPage(page));
+  },
+  productDetailPage: async ({ page }, use) => {
+    await use(new ProductDetailPage(page));
+  },
+  cartPage: async ({ page }, use) => {
+    await use(new CartPage(page));
   },
   clearCart: async ({ page }, use) => {
     await use(async () => {
