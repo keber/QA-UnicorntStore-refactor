@@ -4,6 +4,8 @@
 > Language: es | Base URL: `https://unicornt-store.keber.cl`
 > CI: GitHub Actions (`.github/workflows/qa-e2e.yml`) — no usa Azure DevOps.
 > App front-end puro: sin login, sin backend/API. Ver `qa/memory/arquitectura-unicornstore-2026-08-26.md`.
+> Reporte E2E en vivo (publicado por CI en cada push a `main`): https://keber.dev/QA-UnicorntStore-refactor/
+> Ver [README.md](../README.md) (raíz, en inglés) para la vista general del proyecto.
 
 ---
 

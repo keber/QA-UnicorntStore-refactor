@@ -11,6 +11,9 @@ defaults:
   run:
     working-directory: qa/07-automation/e2e
 
+permissions:
+  contents: read
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
@@ -42,10 +45,34 @@ jobs:
           CI: true
         run: npx playwright test --project=chromium --reporter=list,html
 
-      - name: Upload Playwright report
+      - name: Upload Playwright report (artifact)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: qa/07-automation/e2e/playwright-report/
           retention-days: 14
+
+      # Only the report from main gets published as the public GitHub Pages
+      # site - PR/branch runs still get the artifact above, not a live URL.
+      - name: Upload report for GitHub Pages
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: qa/07-automation/e2e/playwright-report/
+
+  publish-report:
+    name: Publish report to GitHub Pages
+    needs: e2e
+    if: always() && needs.e2e.result != 'cancelled' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
