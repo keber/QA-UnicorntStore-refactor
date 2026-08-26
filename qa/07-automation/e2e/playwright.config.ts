@@ -25,6 +25,12 @@ export default defineConfig({
   testDir: './tests',
   testIgnore: ['**/helpers/debug/**', '**/seeds/**'],
 
+  // ------ Code coverage (fixtures/coverage-fixture.ts stages per-test data
+  // via mcr.add(); these merge it into the final report once - see
+  // mcr.config.ts for what's in/out of scope) ------
+  globalSetup: './global-setup.ts',
+  globalTeardown: './global-teardown.ts',
+
   // ------ Parallelism ------
   // No shared session/storageState to worry about - safe to parallelize.
   fullyParallel: true,

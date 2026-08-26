@@ -12,6 +12,7 @@
     "test:p1": "playwright test --grep \"@P0|@P1\"",
     "test:module": "playwright test --grep {{MODULE_PATTERN}}",
     "report": "playwright show-report",
+    "report:coverage": "npx http-server coverage-reports -o",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -29,6 +30,7 @@
     "prettier": "^3.3.0",
     "jiti": "^2.4.2",
     "typescript": "^5.5.0",
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "monocart-coverage-reports": "^2.13.0"
   }
 }

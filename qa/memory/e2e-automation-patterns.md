@@ -133,3 +133,29 @@ una columna en decenas de filas de una tabla Markdown), usar operaciones de stri
 caracteres especiales vía `String.fromCharCode`/`String.fromCodePoint` en vez de literales
 embebidos. Verificar el conteo de filas cambiadas contra el esperado antes de confiar en el
 resultado.
+
+## 11. Code coverage E2E con `monocart-coverage-reports` (2026-08-26)
+
+Se agregó cobertura de código V8 (JS/CSS) del front-end propio de la app, vía el API CDP
+`page.coverage` de Playwright (Chromium-only) + [`monocart-coverage-reports`](https://github.com/cenfun/monocart-coverage-reports).
+No confundir con el coverage de TCs (`COVERAGE-MAPPING.md`) — este mide qué % del *código*
+`assets/js/*.js`/`assets/css/main.css` real ejecuta la suite, no qué % del plan de pruebas está
+automatizado.
+
+- **Patrón oficial verificado, no adivinado**: antes de escribir el fixture se trajo el ejemplo
+  real `cenfun/playwright-coverage` (repo del propio autor del paquete) vía `gh api` para copiar
+  el patrón exacto de `fixtures.ts`/`global-setup.ts`/`global-teardown.ts` — la API del paquete
+  (namespace `MCR` con `export =`, tipos `CoverageReportOptions`/`V8CoverageEntry`) no es intuible
+  de memoria con confianza suficiente para código que va a CI.
+- **`entryFilter`/`sourceFilter` son obligatorios** aquí: la página también carga Bootstrap
+  (`cdn.jsdelivr.net`) y Font Awesome (`cdnjs.cloudflare.com`) desde CDN — sin filtrar por
+  `/assets/(js|css)/` el reporte mezclaría código vendor minificado irrelevante.
+- El JS propio de la app no está minificado ni bundleado (confirmado en
+  `arquitectura-unicornstore-2026-08-26.md`), así que no hace falta configurar sourcemaps — las
+  líneas del reporte coinciden 1:1 con el código fuente real servido.
+- Fixture auto (`fixtures/coverage-fixture.ts`, merged en `test-options.ts` vía `mergeTests()`)
+  escucha `context.on('page', ...)` en vez de usar solo el fixture `page` — así un test que abra
+  una pestaña nueva también queda cubierto, igual que el ejemplo oficial.
+- Resultado real de la primera corrida completa (156 tests, 150 pass + 6 fixme): **93.55%
+  statements, 96.18% lines, 100% functions, 71.05% branches** sobre `app.js`/`cart.js`/
+  `products.js`. Publicado en CI junto al reporte de tests, ver `README.md` raíz → "Code Coverage".

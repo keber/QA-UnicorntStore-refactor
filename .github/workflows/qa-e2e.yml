@@ -53,13 +53,29 @@ jobs:
           path: qa/07-automation/e2e/playwright-report/
           retention-days: 14
 
+      - name: Upload coverage report (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: qa/07-automation/e2e/coverage-reports/
+          retention-days: 14
+
       # Only the report from main gets published as the public GitHub Pages
-      # site - PR/branch runs still get the artifact above, not a live URL.
-      - name: Upload report for GitHub Pages
+      # site - PR/branch runs still get the artifacts above, not a live URL.
+      # Test report at the site root, code coverage report under /coverage/.
+      - name: Assemble Pages site (test report + coverage report)
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p pages-site/coverage
+          [ -d playwright-report ] && cp -r playwright-report/. pages-site/ || true
+          [ -d coverage-reports ] && cp -r coverage-reports/. pages-site/coverage/ || true
+
+      - name: Upload site for GitHub Pages
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: qa/07-automation/e2e/playwright-report/
+          path: qa/07-automation/e2e/pages-site/
 
   publish-report:
     name: Publish report to GitHub Pages

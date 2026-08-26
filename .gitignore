@@ -3,6 +3,7 @@ node_modules
 .auth
 test-results
 playwright-report
+coverage-reports
 blob-report
 dist
 diagnosis
