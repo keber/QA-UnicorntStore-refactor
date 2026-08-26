@@ -1,0 +1,34 @@
+{
+  "name": "qa-unicornstore-refactor-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E2E Playwright test suite for QA-UnicorntStore-refactor (front-end only, no login, no backend/API)",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:p0": "playwright test --grep @P0",
+    "test:p1": "playwright test --grep \"@P0|@P1\"",
+    "test:module": "playwright test --grep {{MODULE_PATTERN}}",
+    "report": "playwright show-report",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "validate": "npx @keber/qa-framework validate"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@typescript-eslint/eslint-plugin": "^8.34.1",
+    "@typescript-eslint/parser": "^8.34.1",
+    "@types/node": "^24.0.1",
+    "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.0",
+    "eslint-plugin-playwright": "^2.2.0",
+    "prettier": "^3.3.0",
+    "jiti": "^2.4.2",
+    "typescript": "^5.5.0",
+    "dotenv": "^16.0.0"
+  }
+}

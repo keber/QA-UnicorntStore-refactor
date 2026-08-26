@@ -1,0 +1,122 @@
+# Bug Report — DEF-002: Entrada de carrito con producto inexistente deja la UI inconsistente
+
+| Field | Value |
+|-------|-------|
+| Bug ID | DEF-002 |
+| Title | Un `id` de producto inexistente en `unicornt_cart` deja el offcanvas sin filas ni mensaje de vacío, con footer y "Finalizar compra" activos |
+| Severity | Low |
+| Priority | P3 |
+| Status | Open |
+| Assigned to | Unassigned |
+| Module | Carrito |
+| Submodule | CARRITO |
+| Environment | QA (`https://unicornt-store.keber.cl`) |
+| Browser | Chromium (via `@playwright/cli`) |
+| Date reported | 2026-08-26 |
+| ADO WI | N/A (ADO deshabilitado en este proyecto) |
+| Related TCs | TC-CARR-CARRITO-035, TC-CARR-CARRITO-036, TC-CARR-CARRITO-055 |
+
+---
+
+## Description
+
+Si `localStorage['unicornt_cart']` contiene una entrada cuyo `id` no corresponde a ningún
+producto del catálogo actual (escenario realista si el catálogo cambia entre despliegues mientras
+el carrito de un visitante persiste en su navegador), el offcanvas del carrito no renderiza
+ninguna fila de producto ni tampoco el mensaje de "carrito vacío" — queda en un estado híbrido
+donde el footer (Total + "Finalizar compra"/"Vaciar carrito") se muestra igual, con Total `$0`, y
+el badge del botón "Carrito" sigue contando la cantidad de la entrada inválida.
+
+---
+
+## Steps to Reproduce
+
+| Step | Action |
+|------|--------|
+| 1 | Navigate to `{{QA_BASE_URL}}/index.html` |
+| 2 | Establecer `localStorage['unicornt_cart'] = '[{"id":9999,"qty":1}]'` (id inexistente) y recargar |
+| 3 | Click en el botón "Carrito" |
+| 4 | Observe `#cart-items`, `#cart-footer` y el badge del botón "Carrito" |
+
+---
+
+## Expected Result
+
+El sistema debería, como mínimo, ignorar la entrada inválida y mostrar el estado de "carrito
+vacío" (mensaje + footer oculto) si no queda ninguna entrada resoluble, o mostrar algún indicio
+de que una línea no pudo cargarse. El badge no debería contar unidades de productos que no
+existen.
+
+---
+
+## Actual Result
+
+- `#cart-items` queda completamente vacío (ni filas de producto ni el mensaje "El carrito está
+  vacío.").
+- `#cart-footer` se muestra igual (no queda en `display:none`), con `#cart-total` = `"$0"`.
+- El badge del botón "Carrito" muestra `"1"` (la `qty` de la entrada inválida).
+- Click en "Finalizar compra" en este estado se completa "exitosamente": muestra el mismo toast
+  `"¡Gracias por tu compra! Tu pedido está en camino. 🦄"` y deja `unicornt_cart = []`.
+
+---
+
+## Evidence
+
+- Verificado interactivamente con `playwright-cli` (`eval`/`localstorage-list`) en esta sesión de
+  exploración (2026-08-26). No se capturó screenshot.
+
+---
+
+## Root Cause Analysis
+
+Bajo investigación. Hipótesis: el renderizado de `#cart-items` probablemente usa
+`cart.map(item => products.find(p => p.id === item.id))` sin filtrar los `undefined` resultantes
+antes de decidir si el carrito está "vacío" (esa decisión probablemente compara
+`cart.length === 0`, que es `false` aunque ninguna línea sea renderizable). El total, en cambio,
+probablemente sí filtra/ignora las entradas no resueltas al sumar (de ahí el `$0` en vez de
+`NaN`).
+
+---
+
+## Fix Suggestion
+
+Antes de decidir si mostrar el estado vacío, filtrar `unicornt_cart` contra el catálogo real y
+usar la longitud del resultado filtrado (no la del array crudo). Idealmente, además, limpiar
+silenciosamente las entradas huérfanas de `localStorage` al detectarlas.
+
+---
+
+## Impact on Automation
+
+| TC ID | Current test state | Impact |
+|-------|-------------------|--------|
+| TC-CARR-CARRITO-035 | Documentado como negativo con resultado actual ≠ esperado | Automatizar con `test.fixme()` hasta que se decida el fix |
+| TC-CARR-CARRITO-036 | Idem | Idem |
+| TC-CARR-CARRITO-055 | Documenta el síntoma del Total en `$0` | Puede automatizarse como assertion del estado actual (no requiere `fixme` si solo se verifica el síntoma, no el fix) |
+
+**Test skip command sugerido**:
+```typescript
+test.fixme(true,
+  'DEF-002: entrada de carrito con producto inexistente no muestra estado vacío ni oculta el footer. Reactivar cuando se corrija.'
+);
+```
+
+---
+
+## Reactivation Instructions
+
+Cuando se corrija:
+1. Remover `test.fixme()` de los TCs listados arriba.
+2. Ajustar la aserción esperada: `#cart-items` debe mostrar el mensaje de "carrito vacío" (o el
+   indicio de línea inválida que se decida implementar) y `#cart-footer` debe reflejar
+   correctamente si hay o no ítems válidos.
+3. Ejecutar los tests al menos 2 veces para confirmar estabilidad.
+4. Mover este archivo a `06-defects/resolved/`.
+
+---
+
+## Changelog
+
+| Version | Date | Description |
+|---------|------|--------------|
+| 1.0 | 2026-08-26 | Bug reportado durante Stage 1 (module analysis) de CARR/CARRITO |
