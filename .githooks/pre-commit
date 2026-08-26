@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Rule 12 gate (.github/instructions/qa-framework.instructions.md):
+# Spanish .md artifacts must carry their accents.
+#
+# Only applies to files that ARE Spanish - English artifacts (this repo's own README-style
+# framework docs, CHANGELOGs, FRAMEWORK-FIXES-*.md reports, etc.) legitimately score 0
+# accented characters and must not fail.
+#
+# Adapted from a FRAMEWORK-FIXES-qa-framework-v4.md finding reviewed earlier in this
+# project's setup (no longer present in the repo), using grep/wc instead of ripgrep since
+# `rg` is not guaranteed to be installed on every contributor's machine.
+set -eu
+# Deliberately no `pipefail`: with it, `grep ... | wc -l` reports grep's exit code (1) when a
+# file has zero matches, and `set -e` would then abort the whole hook on the first clean file
+# instead of just recording a 0 count.
+
+failed=0
+files=$(git diff --cached --name-only --diff-filter=ACM -- '*.md' || true)
+
+for f in $files; do
+  [ -f "$f" ] || continue
+
+  es_hits=$(grep -Eio '\<(que|para|con|por|los|las|del|una|como|pero|este|esta|sin|sobre|desde)\>' "$f" | wc -l | tr -d ' ')
+  if [ "$es_hits" -lt 15 ]; then
+    continue   # not Spanish enough to judge
+  fi
+
+  accents=$(grep -o '[áéíóúÁÉÍÓÚñÑüÜ]' "$f" | wc -l | tr -d ' ')
+  if [ "$accents" -eq 0 ]; then
+    echo "RULE 12: $f reads as Spanish ($es_hits markers) but has 0 accented characters."
+    failed=1
+  fi
+done
+
+if [ "$failed" -eq 1 ]; then
+  echo ""
+  echo "Commit blocked: Spanish .md file(s) above are missing accents (rule 12 in"
+  echo ".github/instructions/qa-framework.instructions.md). Fix the accents and re-stage."
+  echo "To bypass in a genuine false positive, use 'git commit --no-verify' and say why."
+  exit 1
+fi
+
+exit 0
