@@ -10,3 +10,4 @@ diagnosis
 *.tsbuildinfo
 .playwright-cli
 debug.log
+temp/
