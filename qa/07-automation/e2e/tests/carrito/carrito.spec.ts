@@ -5,11 +5,12 @@
  * @plan qa/02-test-plans/sprints/Sprint-001/Plan-de-Pruebas-QA-UnicorntStore-refactor-Sprint-001-CARR.md
  * @priority P0-P3
  *
- * P0 (Stage 5 first pass) + P1-P3 (Stage 5 second pass, 2026-08-26). TC-CARR-CARRITO-035/036
- * are `test.fixme()`-tagged for DEF-002 (a cart entry whose product id no longer exists in the
- * catalog leaves the offcanvas UI inconsistent - see qa/06-defects/open/DEF-002-*.md).
- * TC-CARR-CARRITO-055 documents the current ($0 total) symptom directly, no fixme needed per
- * the Plan de Pruebas' own note (Sección 8).
+ * P0 (Stage 5 first pass) + P1-P3 (Stage 5 second pass, 2026-08-26). DEF-002 status (reconfirmed
+ * 2026-08-29 against the refactor): the original inconsistent offcanvas is fixed - a cart with
+ * only an entry whose product id no longer exists now renders the empty state and hides the
+ * footer, so TC-CARR-CARRITO-035/036 pass again as normal `test()`s. Residual: the "Carrito"
+ * badge still counts that phantom entry's qty - TC-CARR-CARRITO-056, `test.fail()`, tracked as
+ * keber/unicornt-store-frontend#20. TC-CARR-CARRITO-055 documents the $0-total symptom directly.
  *
  * TC-CARR-CARRITO-027/028/029/030/031/048 are `test.fixme()`-tagged as OBSOLETE after the
  * frontend refactor (backend-integration prep): "Finalizar compra" is now a real checkout flow,
@@ -495,35 +496,33 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  test.fixme(
-    '[TC-CARR-CARRITO-035] Entrada con producto inexistente deja la UI inconsistente (DEF-002)',
+  test(
+    '[TC-CARR-CARRITO-035] Una entrada con producto inexistente muestra el estado vacío y oculta el footer',
     { tag: '@P2' },
     async ({ cartPage, page }) => {
       await cartPage.setCart([{ id: 9999, qty: 1 }]);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
-      // Expected (RN-CARR-009): el sistema debería tratar la entrada inválida como si no
-      // existiera - mostrar el estado vacío ("El carrito está vacío.") y ocultar el footer.
-      // Actual (DEF-002): #cart-items no muestra ninguna línea NI el mensaje de vacío (el
-      // `.map()` de renderCart() produce "" para el producto no encontrado), el footer se
-      // muestra igual (display distinto de none) con Total "$0", y el badge muestra "1".
+      // RN-CARR-009: la entrada inválida se trata como inexistente - #cart-items muestra "El
+      // carrito está vacío." y #cart-footer queda oculto. Corregido en el refactor (era DEF-002:
+      // #cart-items quedaba sin líneas NI mensaje, con el footer visible); reconfirmado como fix
+      // el 2026-08-29 - de-fixme'd. El residual del badge (sigue contando "1") se rastrea en
+      // TC-CARR-CARRITO-056 / keber/unicornt-store-frontend#20.
       await expect(cartPage.emptyMessage).toBeVisible();
       await expect(cartPage.footer).toBeHidden();
     }
   );
 
-  test.fixme(
-    '[TC-CARR-CARRITO-036] "Finalizar compra" se completa sobre un carrito solo con entrada inválida (DEF-002)',
+  test(
+    '[TC-CARR-CARRITO-036] "Finalizar compra" no está disponible sobre un carrito solo con entrada inválida',
     { tag: '@P2' },
     async ({ cartPage, page }) => {
       await cartPage.setCart([{ id: 9999, qty: 1 }]);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
-      // Expected (RN-CARR-009): el sistema debería impedir "finalizar" una compra sin ítems
-      // válidos - el footer/botón "Finalizar compra" no deberían estar disponibles para un
-      // carrito con solo la entrada inválida de TC-CARR-CARRITO-035.
-      // Actual (DEF-002): el footer se muestra igual, "Finalizar compra" se ejecuta con éxito
-      // (mismo toast que una compra real) y unicornt_cart pasa a [].
+      // RN-CARR-009: sin ítems válidos, el footer y "Finalizar compra" no están disponibles.
+      // Corregido en el refactor (era DEF-002: el footer se mostraba y "Finalizar compra" se
+      // ejecutaba con éxito); reconfirmado como fix el 2026-08-29 - de-fixme'd.
       await expect(cartPage.checkoutButton).toBeHidden();
     }
   );
@@ -770,6 +769,22 @@ test.describe('carrito de compras (offcanvas)', () => {
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
       await expect(cartPage.total).toHaveText('$0');
+    }
+  );
+
+  test.fail(
+    '[TC-CARR-CARRITO-056] El badge cuenta unidades de un producto inexistente en el catálogo (DEF-002)',
+    { tag: '@P3' },
+    async ({ cartPage, page }) => {
+      await cartPage.setCart([{ id: 9999, qty: 1 }]);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      // Expected (RN-CARR-009): con solo entradas inválidas el badge está oculto, consistente
+      // con el offcanvas (estado vacío) y el total ($0).
+      // Actual (DEF-002 residual, reconfirmado 2026-08-29 contra el refactor): #cart-badge
+      // muestra "1" - el cálculo del badge suma sobre unicornt_cart sin filtrar contra el
+      // catálogo. Issue: keber/unicornt-store-frontend#20.
+      // `test.fail()`: cuando se corrija, pasar a `test()` normal.
+      await expect(cartPage.badge).toBeHidden();
     }
   );
 });

@@ -8,8 +8,12 @@
  * P0 (Stage 5 first pass) + P1-P3 (Stage 5 second pass, 2026-08-26). TC-CAT-DETALLE-050/051/052
  * (variantes/reseñas/productos relacionados) stay out of scope - `Tipo=Bloqueado` in the Plan de
  * Pruebas (features absent from the current app, pending business confirmation).
- * TC-CAT-DETALLE-018/022 are `test.fixme()`-tagged for DEF-001 (max qty not clamped on
- * "Agregar"/"Agregar al carrito").
+ * DEF-001 status (reconfirmed 2026-08-29 against the refactor): editing the qty field to >99
+ * and adding is now clamped to 99 - TC-CAT-DETALLE-018 passes again as a normal `test()`.
+ * Accumulating "Agregar al carrito" over an item already at 99 still overshoots to 100 -
+ * TC-CAT-DETALLE-022 stays `test.fail()`, tracked as keber/unicornt-store-frontend#19.
+ * TC-CAT-DETALLE-047 is `test.fail()`-tagged for DEF-003 (horizontal overflow at a 375px
+ * viewport), tracked as keber/unicornt-store-frontend#21.
  */
 import { test, expect } from '../../fixtures/pom/test-options';
 
@@ -223,15 +227,15 @@ test.describe('catálogo — detalle de producto', () => {
     }
   );
 
-  test.fixme(
-    '[TC-CAT-DETALLE-018] Cantidad > 99 al agregar no se clampea (DEF-001)',
+  test(
+    '[TC-CAT-DETALLE-018] Cantidad > 99 al agregar se clampea a 99',
     { tag: '@P1' },
     async ({ productDetailPage, page }) => {
       await productDetailPage.qtyInput.fill('150');
       await productDetailPage.addToCart();
       const cart = await page.evaluate(() => localStorage.getItem('unicornt_cart'));
-      // Expected (RN-CAT-010): qty debería clampearse a 99.
-      // Actual (DEF-001): qty queda en 150 - "Agregar al carrito" no clampea el límite superior.
+      // RN-CAT-010: qty se clampea a 99. Corregido en el refactor (era DEF-001 escenario A,
+      // qty quedaba en 150); reconfirmado como fix el 2026-08-29 - de-fixme'd.
       expect(JSON.parse(cart ?? '[]')).toEqual([{ id: 1, qty: 99 }]);
     }
   );
@@ -260,8 +264,8 @@ test.describe('catálogo — detalle de producto', () => {
     }
   );
 
-  test.fixme(
-    '[TC-CAT-DETALLE-022] Agregar desde el detalle que excede 99 no se clampea (DEF-001)',
+  test.fail(
+    '[TC-CAT-DETALLE-022] Agregar desde el detalle sobre un ítem ya en 99 supera el límite (DEF-001)',
     { tag: '@P1' },
     async ({ productDetailPage, page }) => {
       await page.evaluate(() =>
@@ -271,7 +275,9 @@ test.describe('catálogo — detalle de producto', () => {
       await productDetailPage.addToCart();
       const cart = await page.evaluate(() => localStorage.getItem('unicornt_cart'));
       // Expected (RN-CAT-012): qty debería permanecer en 99.
-      // Actual (DEF-001): qty sube a 100 - mismo root cause que TC-CAT-DETALLE-018.
+      // Actual (DEF-001, reconfirmado 2026-08-29 contra el refactor): qty sube a 100 al acumular
+      // sobre un ítem ya en el máximo. Issue: keber/unicornt-store-frontend#19.
+      // `test.fail()`: cuando se corrija, pasar a `test()` normal.
       expect(JSON.parse(cart ?? '[]')).toEqual([{ id: 1, qty: 99 }]);
     }
   );
@@ -493,8 +499,8 @@ test.describe('catálogo — detalle de producto', () => {
     }
   );
 
-  test.fixme(
-    '[TC-CAT-DETALLE-047] El detalle en viewport móvil mantiene los controles operables (DEF-003)',
+  test.fail(
+    '[TC-CAT-DETALLE-047] El detalle en viewport móvil no desborda horizontalmente (DEF-003)',
     { tag: '@P3' },
     async ({ productDetailPage, page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
@@ -502,8 +508,10 @@ test.describe('catálogo — detalle de producto', () => {
       await expect(productDetailPage.qtyInput).toBeVisible();
       await expect(productDetailPage.addToCartButton).toBeVisible();
       // Expected: no horizontal overflow at a standard mobile viewport.
-      // Actual (DEF-003, found during this automation pass): #product-content's `.row.g-5`
-      // overflows the viewport by ~12px (scrollWidth 387 vs. clientWidth 375).
+      // Actual (DEF-003, reconfirmado 2026-08-29 contra el refactor, sin cambios):
+      // #product-content's `.row.g-5` overflows the viewport by ~12px (scrollWidth 387 vs.
+      // clientWidth 375). Issue: keber/unicornt-store-frontend#21.
+      // `test.fail()`: cuando se corrija, pasar a `test()` normal.
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(scrollWidth).toBeLessThanOrEqual(376);
     }

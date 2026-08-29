@@ -3,18 +3,19 @@
 | Field | Value |
 |-------|-------|
 | Bug ID | DEF-001 |
-| Title | El flujo "Agregar" (listado y detalle) no clampea la cantidad al máximo de 99 |
+| Title | "Agregar al carrito" supera el límite de 99 al acumular sobre un ítem ya en el máximo (listado y detalle) |
 | Severity | Low |
 | Priority | P2 |
-| Status | Open |
+| Status | Open (parcial — ver Changelog v1.1) |
 | Assigned to | Unassigned |
 | Module | Catálogo |
 | Submodule | LISTADO, DETALLE |
-| Environment | QA (`https://unicornt-store.keber.cl`) |
-| Browser | Chromium (via `@playwright/cli`) |
+| Environment | Detectado contra la versión pre-refactor (hoy en `https://unicornt-store-frontend.keberflores.workers.dev`); reconfirmado contra el refactor en `https://unicornt-store.keber.cl` el 2026-08-29 |
+| Browser | Chromium 1.62 (Playwright) |
 | Date reported | 2026-08-26 |
+| GitHub Issue | keber/unicornt-store-frontend#19 |
 | ADO WI | N/A (ADO deshabilitado en este proyecto) |
-| Related TCs | TC-CAT-LISTADO-027, TC-CAT-DETALLE-018, TC-CAT-DETALLE-022 |
+| Related TCs | TC-CAT-LISTADO-027, TC-CAT-DETALLE-022 (TC-CAT-DETALLE-018 corregido) |
 
 ---
 
@@ -96,26 +97,18 @@ existente" — no solo en los botones +/- del selector visual.
 
 | TC ID | Current test state | Impact |
 |-------|-------------------|--------|
-| TC-CAT-LISTADO-027 | Documentado como negativo con resultado actual ≠ esperado | Automatizar con `test.fixme()` o assertion que documente el valor actual (100) hasta que se decida el fix |
-| TC-CAT-DETALLE-018 | Idem | Idem (valor actual 150) |
-| TC-CAT-DETALLE-022 | Idem | Idem (valor actual 100) |
-
-**Test skip command sugerido** (a aplicar cuando se escriba la automatización en Stage 5):
-```typescript
-test.fixme(true,
-  'DEF-001: el máximo de 99 no se respeta al agregar al carrito. Reactivar cuando se corrija.'
-);
-```
+| TC-CAT-LISTADO-027 | `test.fail()` — asevera el comportamiento correcto (`qty` = 99) | Cuando se corrija #19, Playwright reporta "expected to fail — passed"; pasar a `test()` normal |
+| TC-CAT-DETALLE-022 | `test.fail()` — idem | Idem |
+| TC-CAT-DETALLE-018 | `test()` normal — **pasa** (escenario A corregido en el refactor) | Ninguno; guarda de regresión para el fix del clamp por entrada manual |
 
 ---
 
 ## Reactivation Instructions
 
-Cuando se corrija:
-1. Remover `test.fixme()` de los TCs listados arriba.
-2. Ajustar la aserción esperada a `qty` clampeada en 99 en ambos escenarios.
-3. Ejecutar los tests al menos 2 veces para confirmar estabilidad.
-4. Mover este archivo a `06-defects/resolved/`.
+Cuando se corrija el escenario B (issue #19):
+1. Cambiar `test.fail()` → `test()` en TC-CAT-LISTADO-027 (`tests/catalogo/listado.spec.ts`) y TC-CAT-DETALLE-022 (`tests/catalogo/detalle.spec.ts`).
+2. Ejecutar los tests al menos 2 veces para confirmar estabilidad.
+3. Mover este archivo a `06-defects/resolved/`.
 
 ---
 
@@ -124,3 +117,4 @@ Cuando se corrija:
 | Version | Date | Description |
 |---------|------|--------------|
 | 1.0 | 2026-08-26 | Bug reportado durante Stage 1 (module analysis) de CAT/LISTADO y CAT/DETALLE |
+| 1.1 | 2026-08-29 | Reconfirmado contra el refactor (`keber.cl`). **Escenario A corregido**: editar la cantidad del detalle por sobre 99 y agregar ahora clampa a 99 (TC-CAT-DETALLE-018 des-fixme'd, pasa como test normal). **Escenario B persiste**: agregar sobre un ítem ya en `qty:99` sube a 100, tanto en listado (TC-CAT-LISTADO-027) como en detalle (TC-CAT-DETALLE-022) — ambos `test.fail()`. Reportado como issue keber/unicornt-store-frontend#19. |
