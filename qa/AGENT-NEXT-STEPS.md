@@ -20,6 +20,34 @@ _Ningún sprint activo — Sprint 1 (CAT + CARR regression baseline) está compl
 que quedaban (verificación de CI en push real, y decisión de negocio sobre los 4 TCs `Bloqueado`)
 se resolvieron el 2026-08-26; ver `qa/README.md → Sprint History` para el detalle._
 
+## Mantenimiento pendiente (refactor frontend) — detectado 2026-08-29
+
+El refactor del frontend incorporó comportamiento nuevo en la UI para preparar la integración con
+backend. Eso dejó **7 tests obsoletos** que fallaban en CI. Se aplicó `test.fixme()` a los 7 para
+destrabar CI (comportamiento **aún en flujo**, backend no conectado — no se reescriben todavía):
+
+| TC | Aseguraba (comportamiento viejo) | Realidad tras el refactor |
+|---|---|---|
+| TC-CARR-CARRITO-027 @P0 | "Finalizar compra" vacía el carrito client-side | Ya no lo vacía (flujo real, espera backend) |
+| TC-CARR-CARRITO-029 @P0 | Toast "¡Gracias por tu compra!" | Toast eliminado |
+| TC-CARR-CARRITO-031 @P0 | Sin backend / 0 llamadas `/api/` | Integración con backend introducida |
+| TC-CARR-CARRITO-028 @P1 | "Finalizar compra" cierra el offcanvas | Ya no lo cierra |
+| TC-CARR-CARRITO-030 @P1 | Sin nº de orden / confirmación (vía toast viejo) | Toast eliminado; puede haber confirmación real |
+| TC-CARR-CARRITO-048 @P1 | No existe paso de checkout real | Existe (campo dirección/envío visible) |
+| TC-CAT-LISTADO-039 @P2 | No existe formulario de contacto real | Existe un `<form>` real |
+
+Cuando el comportamiento nuevo estabilice, ejecutar **Stage 6 (`qa-maintenance`)**:
+- [ ] Actualizar specs primero (spec = ground truth): `qa/01-specifications/module-carrito/` y
+  `module-catalogo/` — hoy afirman "sin checkout real, sin formulario de contacto, sin API".
+- [ ] Actualizar `qa/memory/arquitectura-unicornstore-2026-08-26.md` → sección "Lo que NO existe"
+  (formulario de contacto y checkout real ya no aplican).
+- [ ] Grupo B (resultado esperado cambió, escenario sigue válido): reescribir TC-CARR-CARRITO-027
+  /028/029/030 contra el flujo nuevo de "Finalizar compra".
+- [ ] Grupo A (escenario obsoleto): marcar TC-CARR-CARRITO-031/048 y TC-CAT-LISTADO-039 como
+  `OBSOLETE` en el índice (conservar archivos) y crear TCs positivos nuevos para el formulario de
+  contacto y el flujo de checkout con backend.
+- [ ] Actualizar Plan de Pruebas Sprint-001 y `COVERAGE-MAPPING.md` de ambos módulos.
+
 Próximos candidatos para un Sprint 2 (sin iniciar, requieren decisión de scope):
 - [ ] Ampliar automatización a otros módulos de la app (fuera de CAT/CARR) si existen.
 - [ ] Decidir si `DEF-001`/`DEF-002`/`DEF-003` se priorizan para fix — actualmente abiertos y

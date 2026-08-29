@@ -9,6 +9,12 @@
  * (categoría "Tazón") stays out of scope - `Tipo=Bloqueado` in the Plan de Pruebas (feature
  * absent from the current catalog, pending business confirmation). TC-CAT-LISTADO-027 is
  * `test.fixme()`-tagged for DEF-001 (max qty not clamped on "Agregar").
+ *
+ * TC-CAT-LISTADO-039 is `test.fixme()`-tagged as OBSOLETE after the frontend refactor
+ * (backend-integration prep): a real <form> (contact) now exists, so the "no contact form"
+ * assertion no longer holds. Behavior still in flux; Stage 6 (qa-maintenance) will update specs
+ * + memory and replace it with positive form coverage. Tracking: qa/AGENT-NEXT-STEPS.md ->
+ * "Mantenimiento pendiente (refactor frontend)".
  */
 import { test, expect } from '../../fixtures/pom/test-options';
 
@@ -469,7 +475,11 @@ test.describe('catálogo — listado de productos', () => {
     }
   );
 
-  test(
+  // [OBSOLETO - refactor frontend, aún en flujo] El refactor agregó un <form> real (contacto /
+  // prep de integración con backend). Este TC aseguraba su ausencia y ya no aplica; en Stage 6
+  // (qa-maintenance) se reemplaza por cobertura positiva del formulario. Ver el bloque de
+  // cabecera del archivo y qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente (refactor frontend)".
+  test.fixme(
     '[TC-CAT-LISTADO-039] No existe ningún formulario de contacto real',
     { tag: '@P2' },
     async ({ page }) => {

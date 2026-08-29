@@ -11,6 +11,13 @@
  * TC-CARR-CARRITO-055 documents the current ($0 total) symptom directly, no fixme needed per
  * the Plan de Pruebas' own note (Sección 8).
  *
+ * TC-CARR-CARRITO-027/028/029/030/031/048 are `test.fixme()`-tagged as OBSOLETE after the
+ * frontend refactor (backend-integration prep): "Finalizar compra" is now a real checkout flow,
+ * not the old cosmetic no-op, and a real checkout step (shipping address) exists. Behavior is
+ * still in flux (backend not wired yet), so these are parked, not rewritten. Stage 6
+ * (qa-maintenance) will update specs + memory first, then rewrite/replace these once the flow
+ * stabilizes. Tracking: qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente (refactor frontend)".
+ *
  * Cart state is seeded directly via `cartPage.setCart()` + reload rather than through the
  * "Agregar" flow on the catalog pages, to keep these tests independent of DEF-001.
  */
@@ -157,7 +164,10 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  test(
+  // [OBSOLETO - refactor frontend, aún en flujo] "Finalizar compra" ya no vacía el carrito
+  // client-side; el refactor lo convirtió en un flujo real (prep de integración con backend).
+  // Ver el bloque de cabecera del archivo y qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente".
+  test.fixme(
     '[TC-CARR-CARRITO-027] "Finalizar compra" vacía el carrito',
     { tag: '@P0' },
     async ({ cartPage, page }) => {
@@ -169,7 +179,10 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  test(
+  // [OBSOLETO - refactor frontend, aún en flujo] El refactor eliminó el toast cosmético
+  // "¡Gracias por tu compra!" (checkout ahora es un flujo real, prep de backend). #cart-toast
+  // conserva el último mensaje ("Producto agregado al carrito"). Ver cabecera + AGENT-NEXT-STEPS.md.
+  test.fixme(
     '[TC-CARR-CARRITO-029] "Finalizar compra" muestra el toast de agradecimiento',
     { tag: '@P0' },
     async ({ cartPage, page }) => {
@@ -181,7 +194,10 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  test(
+  // [OBSOLETO - refactor frontend, aún en flujo] La premisa "sin backend / 0 llamadas /api/" ya
+  // no aplica: el refactor introdujo la integración con backend. Además el toast de cierre cambió.
+  // Ver cabecera + qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente (refactor frontend)".
+  test.fixme(
     '[TC-CARR-CARRITO-031] "Finalizar compra" no persiste ni envía la "compra" a ningún lado',
     { tag: '@P0' },
     async ({ cartPage, page }) => {
@@ -405,7 +421,9 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  test(
+  // [OBSOLETO - refactor frontend, aún en flujo] Tras el refactor "Finalizar compra" ya no cierra
+  // el offcanvas (ahora abre/mantiene el flujo de checkout real). Ver cabecera + AGENT-NEXT-STEPS.md.
+  test.fixme(
     '[TC-CARR-CARRITO-028] "Finalizar compra" cierra el offcanvas',
     { tag: '@P1' },
     async ({ cartPage, page }) => {
@@ -417,7 +435,10 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  test(
+  // [OBSOLETO - refactor frontend, aún en flujo] Depende del toast "¡Gracias por tu compra!" que
+  // el refactor eliminó; el checkout real (con backend) puede además generar confirmación/orden.
+  // Ver cabecera + qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente (refactor frontend)".
+  test.fixme(
     '[TC-CARR-CARRITO-030] "Finalizar compra" no genera número de orden ni confirmación',
     { tag: '@P1' },
     async ({ cartPage, page }) => {
@@ -640,7 +661,10 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  test(
+  // [OBSOLETO - refactor frontend, aún en flujo] El refactor agregó un paso de checkout real
+  // (campo de dirección/envío visible). Este TC aseguraba su ausencia y ya no aplica; en Stage 6
+  // se reemplaza por cobertura positiva del flujo. Ver cabecera + AGENT-NEXT-STEPS.md.
+  test.fixme(
     '[TC-CARR-CARRITO-048] No existe ningún paso de checkout real',
     { tag: '@P1' },
     async ({ cartPage, page }) => {
