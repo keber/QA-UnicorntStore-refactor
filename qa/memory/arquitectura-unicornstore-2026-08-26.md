@@ -1,5 +1,11 @@
 # Arquitectura de Unicorn't Store — hallazgos de exploración (2026-08-26)
 
+> ⚠️ **OBSOLETO desde el refactor completo (2026-09-06).** Este archivo describe el stub estático
+> pre-refactor (sin login, sin API). El estado actual (Vite multipágina + backend Spring Boot con
+> JWT, catálogo por API, checkout real) está en
+> **`arquitectura-unicornstore-2026-09-06.md`**. Se conserva como referencia del baseline del
+> Sprint 1 y de la versión preservada en `unicornt-store-frontend.keberflores.workers.dev`.
+>
 > Cargar cuando: se inicie el Stage 1 (module analysis) real, se escriban page objects nuevos, o se dude sobre si la app tiene login/API.
 
 ## Contexto
