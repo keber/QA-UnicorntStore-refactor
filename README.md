@@ -8,10 +8,16 @@
 [![Language](https://img.shields.io/badge/docs-Spanish%20%28es%29-informational)](qa/README.md)
 
 QA and end-to-end test automation for [unicornt-store](https://unicornt-store.keber.cl), a
-static front-end e-commerce demo (Bootstrap 5, vanilla JS, cart in `localStorage` — no login, no
-backend, no API). This repo holds the full QA process for two modules, **Catálogo** (product
-listing + detail) and **Carrito** (shopping cart): from live exploration and specifications
-through a regression suite that runs in CI on every push.
+front-end e-commerce demo (Bootstrap 5, vanilla JS, cart in `localStorage`, no login). This repo
+holds the full QA process for two modules, **Catálogo** (product listing + detail) and
+**Carrito** (shopping cart): from live exploration and specifications through a regression suite
+that runs in CI on every push.
+
+> **Refactor in progress (since 2026-08-29):** the app moved to a Vite build and started wiring
+> in a real backend. The suite baselines the *pre-refactor* behavior; 7 tests are parked in
+> `test.fixme()` as OBSOLETE until the new checkout/contact/API behavior stabilizes, at which
+> point the `qa-maintenance` (Stage 6) pass in [`qa/AGENT-NEXT-STEPS.md`](qa/AGENT-NEXT-STEPS.md)
+> updates specs and rewrites them. The code-coverage report is also stale (see below) until then.
 
 **[→ Browse the live E2E test report](https://keber.dev/QA-UnicorntStore-refactor/)** ·
 **[→ Browse the live code coverage report](https://keber.dev/QA-UnicorntStore-refactor/coverage/)**
@@ -65,19 +71,23 @@ npx playwright show-report       # open the last local HTML report
 E2E code coverage is usually associated with unit tests, but it applies here too: every test run
 captures real V8 coverage (via Playwright's Chromium CDP `page.coverage` API and
 [`monocart-coverage-reports`](https://github.com/cenfun/monocart-coverage-reports)) of the app's
-*own* front-end JS/CSS — `assets/js/{app,cart,products}.js` and `assets/css/main.css` — as
-actually executed by the suite. Vendor code the pages also load (Bootstrap, Font Awesome, both
-from CDN) is filtered out; see `entryFilter`/`sourceFilter` in
-[`qa/07-automation/e2e/mcr.config.ts`](qa/07-automation/e2e/mcr.config.ts). Because this app's own
-JS ships unminified and unbundled, coverage lines map straight to the real source with no
-sourcemap step needed.
+*own* front-end JS/CSS as actually executed by the suite, filtering out vendor code (Bootstrap,
+Font Awesome) via `entryFilter`/`sourceFilter` in
+[`qa/07-automation/e2e/mcr.config.ts`](qa/07-automation/e2e/mcr.config.ts).
 
 This measures *"how much of the app's own front-end code does the E2E suite exercise"* — a
 different signal from the TC/requirements coverage in
 [`COVERAGE-MAPPING.md`](qa/07-automation/e2e/tests/catalogo/COVERAGE-MAPPING.md) (which tracks
 what fraction of the *documented test cases* are automated). Both matter; neither substitutes for
-the other. As of the last `main` run: **93%+ statement coverage, 96%+ line coverage, 100%
-function coverage** — see the live report for current numbers.
+the other.
+
+> ⚠️ **The coverage report has read 0% since the 2026-08-29 refactor.** The app moved from
+> unbundled `assets/js/{app,cart,products}.js` to hashed Vite bundles (`main-*.js`, …), so
+> `mcr.config.ts`'s path regex no longer matches anything and MCR emits an empty report without
+> failing the pipeline. Fixing it (enable build sourcemaps, rewrite the filters against real
+> `src/` paths, exclude bundled Bootstrap) is part of the Stage 6 maintenance pass —
+> see [`qa/AGENT-NEXT-STEPS.md`](qa/AGENT-NEXT-STEPS.md). The last valid numbers (pre-refactor)
+> were 93%+ statement / 96%+ line / 100% function.
 
 Implementation: [`fixtures/coverage-fixture.ts`](qa/07-automation/e2e/fixtures/coverage-fixture.ts)
 (auto fixture, starts/stops coverage per test), [`global-setup.ts`](qa/07-automation/e2e/global-setup.ts)
@@ -97,11 +107,13 @@ downloading an artifact:
 
 | Module | Submodule | TCs | Automated | Notes |
 |---|---|---|---|---|
-| Catálogo | LISTADO | 50 | 49 | 1 `Bloqueado` (absent feature, out of scope) |
+| Catálogo | LISTADO | 50 | 49 | 1 `Bloqueado` (absent feature, out of scope); 1 `test.fixme()` OBSOLETE (refactor) |
 | Catálogo | DETALLE | 55 | 52 | 3 `Bloqueado` (absent features, out of scope) |
-| Carrito | CARRITO | 55 | 55 | — |
+| Carrito | CARRITO | 55 | 55 | 6 `test.fixme()` OBSOLETE (refactor) |
 
-156 tests total (150 passing, 6 `test.fixme()` pinned to open defects). See
+157 tests total: 150 passing (incl. 4 `test.fail()` asserting known open defects
+[#19](https://github.com/keber/unicornt-store-frontend/issues/19)/[#20](https://github.com/keber/unicornt-store-frontend/issues/20)/[#21](https://github.com/keber/unicornt-store-frontend/issues/21)
+in the app repo), 7 `test.fixme()` parked OBSOLETE by the refactor. See
 [`qa/06-defects/open/`](qa/06-defects/open/) and the full dashboard at
 [`qa/README.md`](qa/README.md) for details, run history, and known issues.
 

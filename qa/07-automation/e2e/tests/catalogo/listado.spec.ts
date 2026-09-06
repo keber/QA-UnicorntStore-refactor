@@ -8,7 +8,9 @@
  * P0 (Stage 5 first pass) + P1-P3 (Stage 5 second pass, 2026-08-26). TC-CAT-LISTADO-013
  * (categoría "Tazón") stays out of scope - `Tipo=Bloqueado` in the Plan de Pruebas (feature
  * absent from the current catalog, pending business confirmation). TC-CAT-LISTADO-027 is
- * `test.fixme()`-tagged for DEF-001 (max qty not clamped on "Agregar").
+ * `test.fail()`-tagged for DEF-001 (max qty not clamped when "Agregar" accumulates over an item
+ * already at 99) - reconfirmed 2026-08-29 against the refactor, tracked as
+ * keber/unicornt-store-frontend#19.
  *
  * TC-CAT-LISTADO-039 is `test.fixme()`-tagged as OBSOLETE after the frontend refactor
  * (backend-integration prep): a real <form> (contact) now exists, so the "no contact form"
@@ -345,7 +347,7 @@ test.describe('catálogo — listado de productos', () => {
     }
   );
 
-  test.fixme(
+  test.fail(
     '[TC-CAT-LISTADO-027] "Agregar" sobre un ítem ya en el máximo supera el límite de 99 (DEF-001)',
     { tag: '@P1' },
     async ({ catalogPage, page }) => {
@@ -356,7 +358,10 @@ test.describe('catálogo — listado de productos', () => {
       await catalogPage.addToCart(catalogPage.cardAt(0));
       const cart = await page.evaluate(() => localStorage.getItem('unicornt_cart'));
       // Expected (per RN-CAT-004): qty debería permanecer en 99.
-      // Actual (DEF-001): qty sube a 100 - el flujo "Agregar" no clampea el máximo.
+      // Actual (DEF-001, reconfirmado 2026-08-29 contra el refactor): qty sube a 100 - el flujo
+      // "Agregar" no clampea el máximo al acumular sobre un ítem ya en 99.
+      // Issue: keber/unicornt-store-frontend#19. `test.fail()`: cuando se corrija, Playwright
+      // marcará "expected to fail - passed"; pasar entonces a `test()` normal.
       expect(JSON.parse(cart ?? '[]')).toEqual([{ id: 1, qty: 99 }]);
     }
   );

@@ -3,18 +3,19 @@
 | Field | Value |
 |-------|-------|
 | Bug ID | DEF-002 |
-| Title | Un `id` de producto inexistente en `unicornt_cart` deja el offcanvas sin filas ni mensaje de vacío, con footer y "Finalizar compra" activos |
+| Title | El badge del carrito cuenta la `qty` de entradas cuyo `id` no existe en el catálogo (residual — ver Changelog v1.1) |
 | Severity | Low |
 | Priority | P3 |
-| Status | Open |
+| Status | Open (residual — defecto original corregido en el refactor) |
 | Assigned to | Unassigned |
 | Module | Carrito |
 | Submodule | CARRITO |
-| Environment | QA (`https://unicornt-store.keber.cl`) |
-| Browser | Chromium (via `@playwright/cli`) |
+| Environment | Detectado contra la versión pre-refactor (hoy en `https://unicornt-store-frontend.keberflores.workers.dev`); reconfirmado contra el refactor en `https://unicornt-store.keber.cl` el 2026-08-29 |
+| Browser | Chromium 1.62 (Playwright) |
 | Date reported | 2026-08-26 |
+| GitHub Issue | keber/unicornt-store-frontend#20 |
 | ADO WI | N/A (ADO deshabilitado en este proyecto) |
-| Related TCs | TC-CARR-CARRITO-035, TC-CARR-CARRITO-036, TC-CARR-CARRITO-055 |
+| Related TCs | TC-CARR-CARRITO-056 (residual); TC-CARR-CARRITO-035, TC-CARR-CARRITO-036, TC-CARR-CARRITO-055 (defecto original, ahora pasan) |
 
 ---
 
@@ -90,28 +91,19 @@ silenciosamente las entradas huérfanas de `localStorage` al detectarlas.
 
 | TC ID | Current test state | Impact |
 |-------|-------------------|--------|
-| TC-CARR-CARRITO-035 | Documentado como negativo con resultado actual ≠ esperado | Automatizar con `test.fixme()` hasta que se decida el fix |
-| TC-CARR-CARRITO-036 | Idem | Idem |
-| TC-CARR-CARRITO-055 | Documenta el síntoma del Total en `$0` | Puede automatizarse como assertion del estado actual (no requiere `fixme` si solo se verifica el síntoma, no el fix) |
-
-**Test skip command sugerido**:
-```typescript
-test.fixme(true,
-  'DEF-002: entrada de carrito con producto inexistente no muestra estado vacío ni oculta el footer. Reactivar cuando se corrija.'
-);
-```
+| TC-CARR-CARRITO-056 | `test.fail()` — asevera badge oculto con solo entradas inválidas | Cuando se corrija #20, Playwright reporta "expected to fail — passed"; pasar a `test()` normal |
+| TC-CARR-CARRITO-035 | `test()` normal — **pasa** (estado vacío + footer oculto) | Guarda de regresión del fix del defecto original |
+| TC-CARR-CARRITO-036 | `test()` normal — **pasa** ("Finalizar compra" no disponible) | Idem |
+| TC-CARR-CARRITO-055 | `test()` normal — **pasa** (Total `$0`) | Idem |
 
 ---
 
 ## Reactivation Instructions
 
-Cuando se corrija:
-1. Remover `test.fixme()` de los TCs listados arriba.
-2. Ajustar la aserción esperada: `#cart-items` debe mostrar el mensaje de "carrito vacío" (o el
-   indicio de línea inválida que se decida implementar) y `#cart-footer` debe reflejar
-   correctamente si hay o no ítems válidos.
-3. Ejecutar los tests al menos 2 veces para confirmar estabilidad.
-4. Mover este archivo a `06-defects/resolved/`.
+Cuando se corrija el residual del badge (issue #20):
+1. Cambiar `test.fail()` → `test()` en TC-CARR-CARRITO-056 (`tests/carrito/carrito.spec.ts`).
+2. Ejecutar el test al menos 2 veces para confirmar estabilidad.
+3. Mover este archivo a `06-defects/resolved/`.
 
 ---
 
@@ -120,3 +112,4 @@ Cuando se corrija:
 | Version | Date | Description |
 |---------|------|--------------|
 | 1.0 | 2026-08-26 | Bug reportado durante Stage 1 (module analysis) de CARR/CARRITO |
+| 1.1 | 2026-08-29 | Reconfirmado contra el refactor (`keber.cl`). **Defecto original corregido**: el offcanvas con solo una entrada de `id` inexistente ahora muestra "El carrito está vacío.", oculta `#cart-footer` e impide "Finalizar compra" (TC-CARR-CARRITO-035/036 des-fixme'd, pasan como tests normales). **Residual**: `#cart-badge` sigue mostrando la `qty` de la entrada fantasma (`"1"`). Nuevo TC-CARR-CARRITO-056 (`test.fail()`). Reportado como issue keber/unicornt-store-frontend#20. |

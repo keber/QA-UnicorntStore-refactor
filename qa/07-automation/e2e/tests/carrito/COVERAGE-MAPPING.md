@@ -6,9 +6,10 @@
 
 | Submódulo | Total | Automated (@P0) | Automated (@P1-P3) | Bloqueado (PENDING-CODE) |
 |---|---|---|---|---|
-| CARRITO | 55 | 14 | 41 | 0 |
+| CARRITO | 56 | 14 | 42 | 0 |
 
-All 55 automated TCs (14 P0 + 41 P1-P3, 2 of them `test.fixme()`-tagged for DEF-002) pass
+All 56 automated TCs (14 P0 + 42 P1-P3; 1 of them `test.fail()`-tagged for the DEF-002 residual
+(keber/unicornt-store-frontend#20), reconfirmed 2026-08-29 against the refactor) pass
 `tsc --noEmit` and a live run against `{QA_BASE_URL}` (2 consecutive green runs, 0 flake).
 
 ## CARRITO
@@ -49,8 +50,8 @@ All 55 automated TCs (14 P0 + 41 P1-P3, 2 of them `test.fixme()`-tagged for DEF-
 | TC-CARR-CARRITO-032 | El carrito con múltiples ítems distintos renderiza todas las líneas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-033 | El carrito es idéntico entre `index.html` y `product.html` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-034 | El carrito persiste tras recargar la página | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
-| TC-CARR-CARRITO-035 | [DEFECTO] Entrada con producto inexistente deja la UI inconsistente | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ⏸ Automatizado (`test.fixme()` - DEF-002) @P2 |
-| TC-CARR-CARRITO-036 | [DEFECTO derivado] "Finalizar compra" se completa sobre un carrito solo con entrada inválida | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ⏸ Automatizado (`test.fixme()` - DEF-002) @P2 |
+| TC-CARR-CARRITO-035 | Una entrada con producto inexistente muestra el estado vacío y oculta el footer | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) — era DEF-002, corregido en el refactor |
+| TC-CARR-CARRITO-036 | "Finalizar compra" no está disponible sobre un carrito solo con entrada inválida | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) — era DEF-002, corregido en el refactor |
 | TC-CARR-CARRITO-037 | La imagen de cada línea tiene `alt` igual al nombre del producto | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
 | TC-CARR-CARRITO-038 | El precio unitario incluye el sufijo "c/u" | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P3) |
 | TC-CARR-CARRITO-039 | El formato de precio es consistente con listado/detalle | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
@@ -70,3 +71,4 @@ All 55 automated TCs (14 P0 + 41 P1-P3, 2 of them `test.fixme()`-tagged for DEF-
 | TC-CARR-CARRITO-053 | Cerrar y reabrir el offcanvas mantiene el estado actualizado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
 | TC-CARR-CARRITO-054 | Vaciar el carrito actualiza el badge en la misma pestaña sin recargar | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-055 | El total muestra `$0` cuando el carrito solo tiene entradas inválidas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P3) |
+| TC-CARR-CARRITO-056 | [DEFECTO] El badge cuenta unidades de un producto inexistente en el catálogo | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ⚠️ Automatizado (`test.fail()` - DEF-002 #20) @P3 |

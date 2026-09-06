@@ -3,7 +3,9 @@
 > Framework: `@keber/qa-framework` v1.11.3
 > Language: es | Base URL: `https://unicornt-store.keber.cl`
 > CI: GitHub Actions (`.github/workflows/qa-e2e.yml`) — no usa Azure DevOps.
-> App front-end puro: sin login, sin backend/API. Ver `qa/memory/arquitectura-unicornstore-2026-08-26.md`.
+> App front-end, sin login. **El refactor 2026-08-29 empezó a introducir integración con
+> backend (WIP)** — la constante "sin backend/API" ya no es firme; ver
+> `qa/AGENT-NEXT-STEPS.md → Mantenimiento pendiente` y `qa/memory/arquitectura-unicornstore-2026-08-26.md`.
 > Reporte E2E en vivo (publicado por CI en cada push a `main`): https://keber.dev/QA-UnicorntStore-refactor/
 > Reporte de code coverage en vivo (JS/CSS propio de la app, ver `../README.md → Code Coverage`): https://keber.dev/QA-UnicorntStore-refactor/coverage/
 > Ver [README.md](../README.md) (raíz, en inglés) para la vista general del proyecto.
@@ -14,11 +16,18 @@
 
 | Module | Submodule | TCs Total | TCs Automated | Plan | Status | Last Run |
 |---|---|---|---|---|---|---|
-| CAT (Catálogo) | LISTADO | 50 | 49 (10 @P0 + 39 @P1-P3, 1 Bloqueado) | ✅ | ✅ Stage 5 P0+P1-P3 done | 2026-08-26 (150/150 pass, 6 fixme) |
-| CAT (Catálogo) | DETALLE | 55 | 52 (8 @P0 + 44 @P1-P3, 3 Bloqueado) | ✅ | ✅ Stage 5 P0+P1-P3 done | 2026-08-26 (150/150 pass, 6 fixme) |
-| CARR (Carrito) | CARRITO | 55 | 55 (14 @P0 + 41 @P1-P3) | ✅ | ✅ Stage 5 P0+P1-P3 done | 2026-08-26 (150/150 pass, 6 fixme) |
+| CAT (Catálogo) | LISTADO | 50 | 49 (10 @P0 + 39 @P1-P3, 1 Bloqueado) | ✅ | ✅ Stage 5 done · ⚠️ 1 test.fixme OBSOLETE (refactor) | 2026-09-03 (green, ver Last Run) |
+| CAT (Catálogo) | DETALLE | 55 | 52 (8 @P0 + 44 @P1-P3, 3 Bloqueado) | ✅ | ✅ Stage 5 done | 2026-09-03 (green, ver Last Run) |
+| CARR (Carrito) | CARRITO | 55 | 55 (14 @P0 + 41 @P1-P3) | ✅ | ✅ Stage 5 done · ⚠️ 6 test.fixme OBSOLETE (refactor) | 2026-09-03 (green, ver Last Run) |
 
 **Legend**: ✅ Done · ⚠️ Partial · 🔲 Not started · ⛔ Blocked
+
+> **Mantenimiento por el refactor (2026-08-29+)**: el refactor del frontend dejó **7 tests
+> obsoletos** en `test.fixme()` (comportamiento de checkout / contacto / "sin API" que cambió; el
+> backend aún no está conectado). Cuando el nuevo comportamiento estabilice se ejecuta **Stage 6
+> (`qa-maintenance`)** — checklist completo en `qa/AGENT-NEXT-STEPS.md`. Incluye reparar el
+> reporte de code coverage, que sale en 0 desde el cambio a Vite (bundles con hash ≠ regex actual
+> de `mcr.config.ts`).
 
 ---
 
@@ -49,11 +58,16 @@ npx playwright test --last-failed
 
 ## Active Blockers
 
-| ID | Description | Affects | Opened | Status |
-|---|---|---|---|---|
-| DEF-001 | Límite máximo de cantidad (99) no se respeta al agregar al carrito | CAT/LISTADO, CAT/DETALLE | 2026-08-26 | Open (Low/P2) |
-| DEF-002 | Entrada de carrito con producto inexistente deja la UI inconsistente (sin filas ni mensaje de vacío, footer y "Finalizar compra" activos) | CARR/CARRITO | 2026-08-26 | Open (Low/P3) |
-| DEF-003 | `product.html` desborda horizontalmente (~12px) en viewport móvil de 375px (`.row.g-5` de `#product-content`) | CAT/DETALLE | 2026-08-26 | Open (Low/P3) |
+| ID | Description | Affects | Opened | Issue | Status |
+|---|---|---|---|---|---|
+| DEF-001 | Límite máximo de cantidad (99) no se respeta al agregar sobre un ítem ya en 99 (escenario A — editar manual >99 — corregido en el refactor) | CAT/LISTADO, CAT/DETALLE | 2026-08-26 | [#19](https://github.com/keber/unicornt-store-frontend/issues/19) | Open parcial (Low/P2) — reconfirmado vs refactor 2026-08-29 |
+| DEF-002 | Residual: el badge del carrito cuenta la `qty` de una entrada fantasma (el offcanvas inconsistente original se corrigió en el refactor) | CARR/CARRITO | 2026-08-26 | [#20](https://github.com/keber/unicornt-store-frontend/issues/20) | Open residual (Low/P3) — reconfirmado vs refactor 2026-08-29 |
+| DEF-003 | `product.html` desborda horizontalmente (~12px) en viewport móvil de 375px (`.row.g-5` de `#product-content`) | CAT/DETALLE | 2026-08-26 | [#21](https://github.com/keber/unicornt-store-frontend/issues/21) | Open (Low/P3) — reproduce sin cambios vs refactor 2026-08-29 |
+
+> Issues abiertos en el repo de la **app** (`keber/unicornt-store-frontend`), no en este repo de QA.
+> Los TCs que los demuestran están en `test.fail()` (Playwright los marca cuando se corrijan):
+> TC-CAT-LISTADO-027, TC-CAT-DETALLE-022 (DEF-001); TC-CARR-CARRITO-056 (DEF-002);
+> TC-CAT-DETALLE-047 (DEF-003).
 
 ---
 
@@ -61,6 +75,7 @@ npx playwright test --last-failed
 
 | Suite | Date | Pass | Fail | Skip | CI Link |
 |---|---|---|---|---|---|
+| E2E (@P0-@P3, full suite) | 2026-09-03 | 150 (incl. 4 `test.fail()` esperados) | 0 | 7 (`test.fixme()` OBSOLETE — refactor) | Local run (`suite-maintenance`). 13 fallos transitorios de teardown solo con paralelismo local alto — verde en serie (`--workers=1`, como CI). Ver Flaky Tests. |
 | E2E (@P0-@P3, full suite) | 2026-08-26 | 150 | 0 | 6 (`test.fixme()` - DEF-001/002/003) | [run 1](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001), [run 2](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33013887052) — both green, 0 flake |
 
 > Update this table after each significant run. The CI Link is a GitHub Actions run URL
@@ -70,6 +85,8 @@ npx playwright test --last-failed
 
 | Date | Suite | Pass | Skip | Fail | Duration | Report |
 |---|---|---|---|---|---|---|
+| 2026-09-03 | `tests/catalogo/detalle.spec.ts` (`--workers=1`, re-run tras flake) | 52 | 0 | 0 | ~1.4m | `qa/07-automation/e2e/playwright-report/` (local, gitignored) |
+| 2026-09-03 | full suite (`--workers=6`, default local) | 137 | 7 | 13 transitorios (teardown timeout, no reproducen en serie) | ~6.5m | idem |
 | 2026-08-26 | `tests/catalogo tests/carrito` (@P0) | 32 | 0 | 0 | ~24s | `qa/07-automation/e2e/playwright-report/` (local, gitignored) |
 | 2026-08-26 | `tests/catalogo tests/carrito` (@P0-@P3, full suite) | 150 | 6 | 0 | ~90s (×2 consecutive runs, 0 flake) | `qa/07-automation/e2e/playwright-report/` (local, gitignored) |
 
@@ -82,6 +99,13 @@ npx playwright test --last-failed
 > `[flaky] TC-MOD-012 - timing issue on slow CI agents - last seen 2026-01-15`
 >
 > Remove the annotation once the test has been stable for 2+ consecutive CI runs.
+
+`[flaky] tests/catalogo/detalle.spec.ts (bloque completo) - "Tearing down context exceeded the
+test timeout of 30000ms" / "browserContext.close: Test ended" bajo paralelismo local alto
+(default = 6 workers). Causa: contención de disco en el MCR().add() por-test de
+fixtures/coverage-fixture.ts cuando varios workers escriben el cache a la vez. No reproduce con
+--workers=1 (config de CI) - last seen 2026-09-03. Mitigación: correr local con --workers=2, o
+cap en playwright.config.ts. CI no afectado.`
 
 ---
 

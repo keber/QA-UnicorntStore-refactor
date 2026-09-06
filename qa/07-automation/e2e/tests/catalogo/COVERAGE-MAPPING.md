@@ -10,8 +10,9 @@
 | DETALLE | 55 | 8 | 44 | 3 |
 | **Total** | **105** | **18** | **83** | **4** |
 
-All 101 automated TCs (18 P0 + 83 P1-P3, 3 of them `test.fixme()`-tagged for DEF-001/DEF-003)
-pass `tsc --noEmit` and a live run against `{QA_BASE_URL}` (2 consecutive green runs, 0 flake).
+All 101 automated TCs (18 P0 + 83 P1-P3; 3 of them `test.fail()`-tagged — 2 for DEF-001
+(keber/unicornt-store-frontend#19), 1 for DEF-003 (#21), reconfirmed 2026-08-29 against the
+refactor) pass `tsc --noEmit` and a live run against `{QA_BASE_URL}` (2 consecutive green runs, 0 flake).
 The 4 `Bloqueado` TCs (features absent from the current app - see the Plan de Pruebas Sección 8)
 are confirmed out of scope by business decision (2026-08-26) - revisit only if these features
 are ever implemented.
@@ -50,7 +51,7 @@ are ever implemented.
 | TC-CAT-LISTADO-024 | El badge del botón "Carrito" pasa de sin badge a "1" | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P0) |
 | TC-CAT-LISTADO-025 | El badge acumula la cantidad total de ítems, no solo líneas | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P1) |
 | TC-CAT-LISTADO-026 | Click repetido en "Agregar" incrementa qty en vez de duplicar la entrada | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P1) |
-| TC-CAT-LISTADO-027 | [DEFECTO] "Agregar" sobre un ítem ya en el máximo supera el límite de 99 | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ⏸ Automatizado (`test.fixme()` - DEF-001) @P1 |
+| TC-CAT-LISTADO-027 | [DEFECTO] "Agregar" sobre un ítem ya en el máximo supera el límite de 99 | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ⚠️ Automatizado (`test.fail()` - DEF-001 #19) @P1 |
 | TC-CAT-LISTADO-028 | El carrito persiste tras recargar el listado | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P0) |
 | TC-CAT-LISTADO-029 | El carrito persiste al navegar listado → detalle → listado | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P1) |
 | TC-CAT-LISTADO-030 | Sin ítems en el carrito, el botón "Carrito" no muestra badge | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P1) |
@@ -96,11 +97,11 @@ are ever implemented.
 | TC-CAT-DETALLE-015 | Cantidad `0` al agregar se sanea a 1 | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
 | TC-CAT-DETALLE-016 | Cantidad negativa al agregar se sanea a 1 | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
 | TC-CAT-DETALLE-017 | Cantidad vacía al agregar se sanea a 1 | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
-| TC-CAT-DETALLE-018 | [DEFECTO] Cantidad > 99 al agregar no se clampea | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ⏸ Automatizado (`test.fixme()` - DEF-001) @P1 |
+| TC-CAT-DETALLE-018 | Cantidad > 99 al agregar se clampea a 99 | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) — era DEF-001 esc. A, corregido en el refactor |
 | TC-CAT-DETALLE-019 | El input de cantidad no acepta letras vía tipeo directo | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P2) |
 | TC-CAT-DETALLE-020 | "Agregar al carrito" crea la entrada en `localStorage` | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P0) |
 | TC-CAT-DETALLE-021 | Agregar desde el detalle sobre un producto ya en el carrito acumula la cantidad | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
-| TC-CAT-DETALLE-022 | [DEFECTO] Agregar desde el detalle que excede 99 no se clampea | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ⏸ Automatizado (`test.fixme()` - DEF-001) @P1 |
+| TC-CAT-DETALLE-022 | [DEFECTO] Agregar desde el detalle sobre un ítem ya en 99 supera el límite | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ⚠️ Automatizado (`test.fail()` - DEF-001 #19) @P1 |
 | TC-CAT-DETALLE-023 | "Volver" navega a `index.html` | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
 | TC-CAT-DETALLE-024 | `id` fuera de rango redirige silenciosamente al listado | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P0) |
 | TC-CAT-DETALLE-025 | `id` no numérico redirige silenciosamente al listado | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
@@ -125,7 +126,7 @@ are ever implemented.
 | TC-CAT-DETALLE-044 | Recargar la página reinicia la cantidad seleccionada a 1 | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P2) |
 | TC-CAT-DETALLE-045 | Doble click rápido en "Aumentar cantidad" incrementa exactamente 2 | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P3) |
 | TC-CAT-DETALLE-046 | Cambiar el `id` en la URL actualiza el detalle al nuevo producto | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P2) |
-| TC-CAT-DETALLE-047 | El detalle en viewport móvil mantiene los controles operables | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ⏸ Automatizado (`test.fixme()` - DEF-003) @P3 |
+| TC-CAT-DETALLE-047 | El detalle en viewport móvil no desborda horizontalmente | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ⚠️ Automatizado (`test.fail()` - DEF-003 #21) @P3 |
 | TC-CAT-DETALLE-048 | Precio y nombre coinciden entre listado y detalle para el mismo `id` | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
 | TC-CAT-DETALLE-049 | Descripción coincide entre listado y detalle para el mismo `id` | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P2) |
 | TC-CAT-DETALLE-050 | No existe selector de talla/color/variante | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | — | 🔲 Bloqueado (PENDING-CODE) |

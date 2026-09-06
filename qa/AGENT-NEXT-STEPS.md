@@ -47,11 +47,26 @@ Cuando el comportamiento nuevo estabilice, ejecutar **Stage 6 (`qa-maintenance`)
   `OBSOLETE` en el índice (conservar archivos) y crear TCs positivos nuevos para el formulario de
   contacto y el flujo de checkout con backend.
 - [ ] Actualizar Plan de Pruebas Sprint-001 y `COVERAGE-MAPPING.md` de ambos módulos.
+- [ ] **Reparar el reporte de code coverage (sale en 0 desde el refactor).** El refactor pasó a
+  Vite: el sitio ya no sirve `/assets/js/{app,cart,products}.js` + `/assets/css/main.css` sino
+  bundles con hash bajo `/assets/` (`main-*.js`, `cart.view-*.js`, `cart-*.css`). El
+  `entryFilter`/`sourceFilter` de `mcr.config.ts` (regex `/\/assets\/(js|css)\//`) ya no matchea
+  nada → MCR genera un reporte vacío (todo 0) sin fallar el pipeline. Para arreglarlo:
+  (1) habilitar sourcemaps en el build del frontend (`build.sourcemap: true`);
+  (2) reescribir `sourceFilter` contra las rutas reales de `src/` del repo del frontend, no
+  contra el bundle minificado; (3) confirmar dónde quedó Bootstrap (si se bundleó dentro de
+  `main-*.js` hay que excluirlo para no contar código de terceros). El comentario de
+  `mcr.config.ts` que dice "unminified, unbundled vanilla JS ... no sourcemap wiring needed"
+  quedó obsoleto — actualizarlo. Ver `qa/07-automation/e2e/global-{setup,teardown}.ts` y
+  `fixtures/coverage-fixture.ts` para el resto del wiring (no cambian).
 
 Próximos candidatos para un Sprint 2 (sin iniciar, requieren decisión de scope):
 - [ ] Ampliar automatización a otros módulos de la app (fuera de CAT/CARR) si existen.
-- [ ] Decidir si `DEF-001`/`DEF-002`/`DEF-003` se priorizan para fix — actualmente abiertos y
-  documentados como comportamiento conocido (`test.fixme()` en la suite).
+- [x] `DEF-001`/`DEF-002`/`DEF-003` reconfirmados contra el refactor (`keber.cl`) el 2026-08-29 y
+  reportados en `keber/unicornt-store-frontend` (#19 DEF-001 escenario B, #20 DEF-002 residual del
+  badge, #21 DEF-003). Los TCs que los demuestran pasaron de `test.fixme()` a `test.fail()`;
+  TC-CAT-DETALLE-018 y TC-CARR-CARRITO-035/036 des-fixme'd (corregidos en el refactor). Pendiente:
+  decidir priorización de fix de los 3 issues abiertos.
 - [ ] Evaluar `qa-test-stabilization` sobre la suite tras acumular corridas de CI reales
   (actualmente 1 sola corrida en `main`, sin historial de flake en CI todavía).
 
