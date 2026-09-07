@@ -87,7 +87,7 @@ npx playwright test --last-failed
 
 | Suite | Date | Pass | Fail | Notes |
 |---|---|---|---|---|
-| E2E full suite vs QA stack (`--workers=2`) | 2026-09-06 | catalogo 98/98 · carrito 54/54 | 0 | Stage 6 re-baseline. "Pass" incluye 8 `test.fail()` guards (DEF-001/002/003/004/007) que reportan como expected-failure. 0 `test.fixme`. |
+| E2E full suite vs QA stack (`CI=true --workers=1`, config de CI) | 2026-09-06 | **152** | 0 | Stage 6 re-baseline, corrida autoritativa (15.6m). "Pass" incluye los 8 `test.fail()` guards (DEF-001/002/003/004/007) que reportan como expected-failure. 0 `test.fixme`. También verde por-directorio con `--workers=2` (catalogo 98/98 · carrito 54/54). |
 | E2E (@P0-@P3, full suite) | 2026-09-03 | 150 | 0 | Pre-refactor baseline (rama `suite-maintenance`, contra prod). |
 | E2E (@P0-@P3, full suite) | 2026-08-26 | 150 | 0 | [run 1](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001), [run 2](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33013887052). |
 
