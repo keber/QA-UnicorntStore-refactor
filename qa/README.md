@@ -137,7 +137,22 @@ Checklist (completed):
 - [x] Confirmed `qa-e2e.yml` (CI) passes green on a real push to `main` — repo created at `keber/QA-UnicorntStore-refactor`, [run succeeded](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001) (150 passed, 6 skipped, lint + tsc clean).
 - [x] Business decision on the 4 `Bloqueado` TCs (Tazón category; detail variants/reviews/related products): **confirmed out of scope** — documented as permanently blocked pending feature implementation, not automated further.
 
-_No other sprints completed yet._
+### Stage 6 "green first" — Re-baseline vs the migrated app (2026-09-06)
+
+**Trigger**: the app completed its migration to a Vite frontend + a real Spring Boot/JWT backend.
+**Outcome**: CAT + CARR suite re-baselined green against the isolated QA stack
+(`unicornt-qa.keber.cl` + `api-unicornt-qa.keber.cl`); target switched from prod.
+
+- [x] Live exploration of the QA stack + backend contract (`unicornt-store-backend/docs/openapi.json`);
+  new arch memory `arquitectura-unicornstore-2026-09-06.md`, findings doc under `qa/05-test-execution/`.
+- [x] Specs aligned to ground truth (v1.1) — `OBSOLETE-SCENARIO` marks, not a full rewrite.
+- [x] API layer reinstated (`fixtures/api/` — `apiRequest` + `registerViaApi` + Zod schemas); `zod` dep; `workers` local = 2; root `.gitattributes`.
+- [x] 3 page objects + 3 spec files rewritten for async catalog (20-of-49 + category filter) and real checkout.
+- [x] Defects filed: DEF-004 (checkout broken, High), DEF-007 (detail 20-cap, High), DEF-005, DEF-006. 4 new `test.fail()` guards.
+- [x] Coverage report parked; CI coverage job + badge removed. Dashboards + both COVERAGE-MAPPING synced.
+- Result vs QA (`--workers=2`): catalogo 98/98, carrito 54/54, 0 real failures.
+- **Not done (Sprint 2 backlog)**: AUTH module, server Cart API coverage, category/pagination
+  coverage, API contract-test suite, coverage-report restore, frontend-repo issues for DEF-004..007.
 
 ---
 

@@ -4,78 +4,78 @@
 
 ## Estado del proyecto
 
-| Módulo | Submódulo | Specs | Plan | Automatización | Estado |
+| Módulo | Submódulo | Specs | Plan | Automatización (vs QA stack) | Estado |
 |---|---|---|---|---|---|
-| CAT (Catálogo) | LISTADO | ✅ (50 TC) | ✅ | ✅ 49/50 (1 Bloqueado, confirmado fuera de alcance) | ✅ Stage 5 P0+P1-P3 automatizado |
-| CAT (Catálogo) | DETALLE | ✅ (55 TC) | ✅ | ✅ 52/55 (3 Bloqueado, confirmado fuera de alcance) | ✅ Stage 5 P0+P1-P3 automatizado |
-| CARR (Carrito) | CARRITO | ✅ (55 TC) | ✅ | ✅ 55/55 | ✅ Stage 5 P0+P1-P3 automatizado |
+| CAT | LISTADO | ✅ v1.1 | ✅ | ✅ 48 (2 OBSOLETE removed, 1 Bloqueado) · 1 `test.fail` DEF-001 | ✅ Stage 6 re-baselined |
+| CAT | DETALLE | ✅ v1.1 | ✅ | ✅ 51 (1 OBSOLETE removed, 3 Bloqueado) · 3 `test.fail` DEF-001/003/007 | ✅ Stage 6 re-baselined |
+| CARR | CARRITO | ✅ v1.1 | ✅ | ✅ 54 (2 OBSOLETE removed) · 4 `test.fail` 3×DEF-004/DEF-002 | ✅ Stage 6 re-baselined |
 
-Setup del framework y del harness de automatización (`qa/07-automation/e2e/`) completo y verificado — ver `qa/README.md`. CI verificado en verde: [GitHub Actions run](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001) (150 passed, 6 skipped, lint + tsc clean), repo en `keber/QA-UnicorntStore-refactor`.
+Target: **stack QA** (`unicornt-qa.keber.cl` + `api-unicornt-qa.keber.cl`). Última corrida local
+2026-09-06: catalogo 98/98 · carrito 54/54 (0 fallos reales; los `test.fail` reportan como
+expected-failure).
 
-**Sprint 1 cerrado el 2026-08-26** — checklist completo movido a `qa/README.md → Sprint History`.
+**Sprint 1 cerrado 2026-08-26** · **Stage 6 "green first" cerrado 2026-09-06** — ambos en
+`qa/README.md → Sprint History`.
 
 ## Checklist del sprint activo
 
-_Ningún sprint activo — Sprint 1 (CAT + CARR regression baseline) está completo. Ambos pendientes
-que quedaban (verificación de CI en push real, y decisión de negocio sobre los 4 TCs `Bloqueado`)
-se resolvieron el 2026-08-26; ver `qa/README.md → Sprint History` para el detalle._
+_Ningún sprint activo._ Stage 6 "green first" está completo (rama `stage6-green-first`, PR a `main`
+pendiente de abrir). Lo que sigue es el **backlog de Sprint 2** — requiere decisión de scope del
+dueño antes de arrancar.
 
-## Mantenimiento pendiente (refactor frontend) — detectado 2026-08-29
+## Stage 6 "green first" — completado 2026-09-06
 
-El refactor del frontend incorporó comportamiento nuevo en la UI para preparar la integración con
-backend. Eso dejó **7 tests obsoletos** que fallaban en CI. Se aplicó `test.fixme()` a los 7 para
-destrabar CI (comportamiento **aún en flujo**, backend no conectado — no se reescriben todavía):
+Re-baseline de la suite CAT+CARR contra la app totalmente migrada (Vite + backend Spring/JWT).
+Hecho:
+- [x] Exploración en vivo del stack QA + lectura del contrato del backend
+  (`unicornt-store-backend/docs/openapi.json`). Nueva memoria de arquitectura
+  (`arquitectura-unicornstore-2026-09-06.md`); findings en
+  `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md`.
+- [x] Specs alineadas a la verdad de terreno (v1.1): READMEs de módulo, `05-test-scenarios.md` de
+  los 3 submódulos, `01-business-rules.md` de LISTADO/CARRITO, `04-test-data.md` de CARRITO.
+  Escenarios muertos marcados `OBSOLETE-SCENARIO`.
+- [x] Harness: target movido al stack QA (`QA_BASE_URL`/`QA_API_URL` en `.env`, `.env.example`,
+  CI). Fixture `apiRequest` + `registerViaApi` + schemas Zod (`fixtures/api/`). `zod` agregado.
+  `workers` local = 2. `.gitattributes` (eol=lf).
+- [x] Page objects (Catalog/ProductDetail/Cart) y los 3 spec files reescritos para el catálogo
+  async (20-de-49 + filtro por categoría), el checkout real y la carga async del detalle.
+- [x] Defectos nuevos filados en `qa/06-defects/open/`: **DEF-004** (checkout roto, High),
+  **DEF-007** (detalle solo resuelve ids 1–20, High), **DEF-005** (botones auth en inglés),
+  **DEF-006** (`badge-tazon`). Guards `test.fail()` para DEF-004 (×3) y DEF-007.
+- [x] Coverage report **en pausa**: `mcr.config.ts` / `coverage-fixture.ts` / `global-*.ts`
+  desconectados (headers `PARKED`), job de coverage removido de CI, badge quitado del README.
+- [x] Dashboards (`qa/README.md`, `README.md` raíz) + ambos `COVERAGE-MAPPING.md` sincronizados.
 
-| TC | Aseguraba (comportamiento viejo) | Realidad tras el refactor |
-|---|---|---|
-| TC-CARR-CARRITO-027 @P0 | "Finalizar compra" vacía el carrito client-side | Ya no lo vacía (flujo real, espera backend) |
-| TC-CARR-CARRITO-029 @P0 | Toast "¡Gracias por tu compra!" | Toast eliminado |
-| TC-CARR-CARRITO-031 @P0 | Sin backend / 0 llamadas `/api/` | Integración con backend introducida |
-| TC-CARR-CARRITO-028 @P1 | "Finalizar compra" cierra el offcanvas | Ya no lo cierra |
-| TC-CARR-CARRITO-030 @P1 | Sin nº de orden / confirmación (vía toast viejo) | Toast eliminado; puede haber confirmación real |
-| TC-CARR-CARRITO-048 @P1 | No existe paso de checkout real | Existe (campo dirección/envío visible) |
-| TC-CAT-LISTADO-039 @P2 | No existe formulario de contacto real | Existe un `<form>` real |
+## Backlog de Sprint 2 (sin iniciar — requiere decisión de scope)
 
-Cuando el comportamiento nuevo estabilice, ejecutar **Stage 6 (`qa-maintenance`)**:
-- [ ] Actualizar specs primero (spec = ground truth): `qa/01-specifications/module-carrito/` y
-  `module-catalogo/` — hoy afirman "sin checkout real, sin formulario de contacto, sin API".
-- [ ] Actualizar `qa/memory/arquitectura-unicornstore-2026-08-26.md` → sección "Lo que NO existe"
-  (formulario de contacto y checkout real ya no aplican).
-- [ ] Grupo B (resultado esperado cambió, escenario sigue válido): reescribir TC-CARR-CARRITO-027
-  /028/029/030 contra el flujo nuevo de "Finalizar compra".
-- [ ] Grupo A (escenario obsoleto): marcar TC-CARR-CARRITO-031/048 y TC-CAT-LISTADO-039 como
-  `OBSOLETE` en el índice (conservar archivos) y crear TCs positivos nuevos para el formulario de
-  contacto y el flujo de checkout con backend.
-- [ ] Actualizar Plan de Pruebas Sprint-001 y `COVERAGE-MAPPING.md` de ambos módulos.
-- [ ] **Reparar el reporte de code coverage (sale en 0 desde el refactor).** El refactor pasó a
-  Vite: el sitio ya no sirve `/assets/js/{app,cart,products}.js` + `/assets/css/main.css` sino
-  bundles con hash bajo `/assets/` (`main-*.js`, `cart.view-*.js`, `cart-*.css`). El
-  `entryFilter`/`sourceFilter` de `mcr.config.ts` (regex `/\/assets\/(js|css)\//`) ya no matchea
-  nada → MCR genera un reporte vacío (todo 0) sin fallar el pipeline. Para arreglarlo:
-  (1) habilitar sourcemaps en el build del frontend (`build.sourcemap: true`);
-  (2) reescribir `sourceFilter` contra las rutas reales de `src/` del repo del frontend, no
-  contra el bundle minificado; (3) confirmar dónde quedó Bootstrap (si se bundleó dentro de
-  `main-*.js` hay que excluirlo para no contar código de terceros). El comentario de
-  `mcr.config.ts` que dice "unminified, unbundled vanilla JS ... no sourcemap wiring needed"
-  quedó obsoleto — actualizarlo. Ver `qa/07-automation/e2e/global-{setup,teardown}.ts` y
-  `fixtures/coverage-fixture.ts` para el resto del wiring (no cambian).
-
-Próximos candidatos para un Sprint 2 (sin iniciar, requieren decisión de scope):
-- [ ] Ampliar automatización a otros módulos de la app (fuera de CAT/CARR) si existen.
-- [x] `DEF-001`/`DEF-002`/`DEF-003` reconfirmados contra el refactor (`keber.cl`) el 2026-08-29 y
-  reportados en `keber/unicornt-store-frontend` (#19 DEF-001 escenario B, #20 DEF-002 residual del
-  badge, #21 DEF-003). Los TCs que los demuestran pasaron de `test.fixme()` a `test.fail()`;
-  TC-CAT-DETALLE-018 y TC-CARR-CARRITO-035/036 des-fixme'd (corregidos en el refactor). Pendiente:
-  decidir priorización de fix de los 3 issues abiertos.
-- [ ] Evaluar `qa-test-stabilization` sobre la suite tras acumular corridas de CI reales
-  (actualmente 1 sola corrida en `main`, sin historial de flake en CI todavía).
+- [ ] **Abrir issues en `keber/unicornt-store-frontend`** para DEF-004 (High), DEF-005, DEF-006,
+  DEF-007 (High). Priorizar el fix de DEF-004 y DEF-007 (rompen flujos core). `gh` outward-facing
+  está bloqueado por el clasificador de auto-mode acá — el dueño los abre.
+- [ ] **Módulo AUTH** (Stage 1→5): `login.html` / `register.html` / sesión JWT / `GET /auth/me`.
+  Hoy solo hay un helper `registerViaApi` para los guards de checkout.
+- [ ] **API de carrito del servidor** (`/api/v1/cart*`): `POST /cart/items`,
+  `PUT/DELETE /cart/items/{id}`, `POST /cart/merge`, `GET /cart`. Funciona a nivel API; sin
+  cobertura E2E ni de contrato.
+- [ ] **Cobertura de catálogo API-driven**: filtro por las 10 categorías, parámetro `q` (búsqueda
+  — existe en la API, sin UI), paginación (`page`/`size`), `GET /products/{id}` directo.
+- [ ] **Capa de contract-tests** derivada de `docs/openapi.json` (auth / product / order / cart):
+  suite `tests/api/` con los schemas Zod ya creados en `fixtures/api/schemas/`.
+- [ ] **Restaurar el reporte de code coverage**: requiere que el build del frontend emita
+  sourcemaps y sirva `src/`. Entonces reescribir `sourceFilter` de `mcr.config.ts` contra rutas
+  `src/` reales, re-conectar `globalSetup`/`globalTeardown` en `playwright.config.ts` y
+  `coverage-fixture` en `test-options.ts`, restaurar el job en `qa-e2e.yml` y el badge.
+- [ ] Reescribir formalmente los workflows `FL-CARR-*` de checkout y crear TCs positivos para el
+  flujo de orden real (hoy cubierto solo por los guards `test.fail()` de DEF-004).
+- [ ] `qa-framework.config.json`: agregar el módulo AUTH a `modules` cuando se inicie ese sprint.
+- [ ] Evaluar `qa-test-stabilization` tras acumular corridas de CI reales contra el stack QA.
 
 ## Referencias de contexto
 
 - `qa/memory/INDEX.md` — cargar antes de tocar cualquier archivo de memoria.
-- `qa/memory/arquitectura-unicornstore-2026-08-26.md` — stack real, módulos, qué NO existe (sin login, sin API).
-- `qa/01-specifications/module-catalogo/README.md` — resumen de hallazgos de Stage 1 para CAT.
-- `qa/01-specifications/module-carrito/README.md` — resumen de hallazgos de Stage 1 para CARR.
-- `qa/02-test-plans/sprints/Sprint-001/` — Planes de Pruebas Sprint 1 (CAT y CARR), fuente para Stage 5.
-- `qa/07-automation/e2e/tests/{catalogo,carrito}/COVERAGE-MAPPING.md` — qué TCs están automatizados vs. pendientes.
-- `.github/skills/qa-automation/references/constitution.md` — reglas de código para `qa/07-automation/e2e/` (enforcement mecánico vía `.claude/scripts/enforce_constitution.py` + ESLint).
+- `qa/memory/arquitectura-unicornstore-2026-09-06.md` — **stack vigente** (Vite + backend JWT).
+- `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md` — selectores, contrato API,
+  lista de cambios por TC.
+- `C:\Users\Usuario\Proyectos\unicornt-store-backend` — repo del backend; contrato en
+  `docs/openapi.json` (idéntico al `/api-docs` en vivo de QA).
+- `qa/07-automation/e2e/tests/{catalogo,carrito}/COVERAGE-MAPPING.md` — estado por TC.
+- `.github/skills/qa-automation/references/constitution.md` + `type-safety-and-data-strategy.md`.
