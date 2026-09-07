@@ -149,12 +149,27 @@ export class CartPage {
   // ==================== Actions ====================
 
   /**
-   * Opens the offcanvas via the navbar "Carrito" button. Does not assert visibility itself
-   * (assertions live in the spec, per the POM rules) - Playwright's auto-waiting already makes
-   * any subsequent interaction with `dialog`'s content wait for the open transition.
+   * Opens the offcanvas via the navbar "Carrito" button.
+   *
+   * First waits for the page's product data (`GET /api/v1/products`) to settle: post-refactor
+   * the cart lines are rendered from that data at open time and are NOT re-rendered if the fetch
+   * lands later, so opening on a `domcontentloaded`-only page yields an empty offcanvas.
    */
   async open(): Promise<void> {
+    // Wait for the page's product data to have rendered before opening: post-refactor the cart
+    // lines are built from that data at open time and are NOT re-rendered if the fetch lands
+    // later. `#product-list` (index) or `#product-detail` (product page) is the DOM signal.
+    await this.productDataRendered
+      .waitFor({ state: 'attached', timeout: 15_000 })
+      .catch(() => undefined);
     await this.openButton.click();
+  }
+
+  /** First product element that only exists once the page's catalog fetch has rendered. */
+  private get productDataRendered(): Locator {
+    const anyProduct = '#product-list article, #product-detail .product-detail__name';
+    // eslint-disable-next-line playwright/no-nth-methods
+    return this.page.locator(anyProduct).first();
   }
 
   /** Closes the offcanvas via its "Cerrar" button. */

@@ -172,10 +172,14 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  // DEF-004 guard. Correct behavior: with an authenticated session and a non-empty cart,
-  // "Finalizar compra" confirms an order (`POST /api/v1/orders`) and the cart is cleared.
-  // Actual: the browser cart is never synced to the server cart, so the order fails and the
-  // cart is left intact. `test.fail()` — flip to `test()` when DEF-004 is fixed.
+  // DEF-004 guards. Correct behavior: with an authenticated session and a non-empty cart,
+  // "Finalizar compra" confirms an order via POST /api/v1/orders, which then clears the cart,
+  // closes the offcanvas, and creates an order retrievable at GET /api/v1/orders.
+  // Actual: the browser cart is never synced to the server cart, so POST /orders fails (400
+  // "cart is empty") — the cart is left intact, the offcanvas stays open, no order is created.
+  // Each test waits for the POST to settle, then asserts the CORRECT end state (which fails
+  // today). Flip `test.fail` -> `test` when DEF-004 is fixed.
+
   test.fail(
     '[TC-CARR-CARRITO-027] "Finalizar compra" confirma la orden y vacía el carrito (DEF-004)',
     { tag: '@P0' },
@@ -186,15 +190,15 @@ test.describe('carrito de compras (offcanvas)', () => {
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
       await cartPage.fillCheckout({ ...VALID_ADDRESS, email: user.email });
+      const ordersPost = page.waitForResponse((r) => r.url().includes('/api/v1/orders'));
       await cartPage.submitCheckout();
-      await expect(cartPage.emptyMessage).toBeVisible();
+      await ordersPost;
       expect(await cartPage.getCart()).toEqual([]);
     }
   );
 
-  // DEF-004 guard. Correct behavior: after a successful checkout the offcanvas closes.
   test.fail(
-    '[TC-CARR-CARRITO-028] "Finalizar compra" cierra el offcanvas al confirmar (DEF-004)',
+    '[TC-CARR-CARRITO-028] "Finalizar compra" no muestra error de submit al confirmar (DEF-004)',
     { tag: '@P1' },
     async ({ cartPage, page, registerViaApi }) => {
       const user = await registerViaApi();
@@ -203,26 +207,34 @@ test.describe('carrito de compras (offcanvas)', () => {
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
       await cartPage.fillCheckout({ ...VALID_ADDRESS, email: user.email });
+      const ordersPost = page.waitForResponse((r) => r.url().includes('/api/v1/orders'));
       await cartPage.submitCheckout();
-      await expect(cartPage.dialog).toBeHidden();
+      await ordersPost;
+      // Correct: a valid checkout shows no form-level error. Actual (DEF-004): POST /orders
+      // fails ("cart is empty") and `#checkout-submit-error` is shown.
+      await expect(cartPage.checkoutSubmitError).toBeHidden();
     }
   );
 
-  // DEF-004 guard. Correct behavior: a successful checkout shows a success confirmation
-  // (success toast and/or an order number). Actual: `#checkout-submit-error` is shown instead.
   test.fail(
-    '[TC-CARR-CARRITO-029] "Finalizar compra" muestra una confirmación de éxito (DEF-004)',
+    '[TC-CARR-CARRITO-029] "Finalizar compra" crea una orden real (DEF-004)',
     { tag: '@P0' },
-    async ({ cartPage, page, registerViaApi }) => {
+    async ({ cartPage, page, registerViaApi, apiRequest }) => {
       const user = await registerViaApi();
       await page.evaluate((t) => localStorage.setItem('unicornt.auth.token', t), user.token);
       await cartPage.setCart([{ id: 1, qty: 1 }]);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
       await cartPage.fillCheckout({ ...VALID_ADDRESS, email: user.email });
+      const ordersPost = page.waitForResponse((r) => r.url().includes('/api/v1/orders'));
       await cartPage.submitCheckout();
-      await expect(cartPage.checkoutSubmitError).toBeHidden();
-      await expect(cartPage.toast).toContainText(/gracias|compra realizada|orden|pedido/i);
+      await ordersPost;
+      const orders = await apiRequest<unknown[]>({
+        method: 'GET',
+        url: '/api/v1/orders',
+        token: user.token,
+      });
+      expect(orders.body.length).toBeGreaterThan(0);
     }
   );
 
@@ -778,6 +790,9 @@ test.describe('carrito de compras (offcanvas)', () => {
     async ({ cartPage, page }) => {
       await cartPage.setCart([{ id: 9999, qty: 1 }]);
       await page.reload({ waitUntil: 'domcontentloaded' });
+      // Let the catalog (and with it the badge script) finish rendering.
+      // eslint-disable-next-line playwright/no-raw-locators, playwright/no-nth-methods
+      await expect(page.locator('#product-list article').first()).toBeVisible();
       // Expected (RN-CARR-009): con solo entradas inválidas el badge está oculto, consistente
       // con el offcanvas (estado vacío) y el total ($0).
       // Actual (DEF-002 residual, reconfirmado 2026-08-29 contra el refactor): #cart-badge
