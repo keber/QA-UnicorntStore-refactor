@@ -4,13 +4,16 @@
 
 ## Summary
 
-| Submódulo | Total | Automated (@P0) | Automated (@P1-P3) | Bloqueado (PENDING-CODE) |
+| Submódulo | Total | Automated | OBSOLETE (removed) | `test.fail()` guards |
 |---|---|---|---|---|
-| CARRITO | 56 | 14 | 42 | 0 |
+| CARRITO | 56 | 54 | 2 (TC-030, TC-031) | 4 (TC-027/028/029 → DEF-004, TC-056 → DEF-002) |
 
-All 56 automated TCs (14 P0 + 42 P1-P3; 1 of them `test.fail()`-tagged for the DEF-002 residual
-(keber/unicornt-store-frontend#20), reconfirmed 2026-08-29 against the refactor) pass
-`tsc --noEmit` and a live run against `{QA_BASE_URL}` (2 consecutive green runs, 0 flake).
+**Stage 6 "green first" (2026-09-06)** — re-baselined against the QA stack
+(`unicornt-qa.keber.cl` + `api-unicornt-qa.keber.cl`). Guest cart ops unchanged. Checkout is a
+real `POST /api/v1/orders` flow but broken end-to-end (**DEF-004**): TC-027/028/029 are now
+`test.fail()` guards asserting the correct post-checkout state. TC-030/031 removed
+(`OBSOLETE-SCENARIO` — premises inverted by the backend). TC-048 rewritten as positive
+checkout-form coverage. `tsc --noEmit` + `eslint` clean; live run 54/54.
 
 ## CARRITO
 
@@ -42,11 +45,11 @@ All 56 automated TCs (14 P0 + 42 P1-P3; 1 of them `test.fail()`-tagged for the D
 | TC-CARR-CARRITO-024 | "Vaciar carrito" no requiere confirmación | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
 | TC-CARR-CARRITO-025 | Tras vaciar el carrito, vuelve el estado vacío | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-026 | El badge desaparece tras vaciar el carrito | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
-| TC-CARR-CARRITO-027 | "Finalizar compra" vacía el carrito | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-028 | "Finalizar compra" cierra el offcanvas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
-| TC-CARR-CARRITO-029 | "Finalizar compra" muestra el toast de agradecimiento | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
-| TC-CARR-CARRITO-030 | "Finalizar compra" no genera número de orden ni confirmación | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
-| TC-CARR-CARRITO-031 | "Finalizar compra" no persiste ni envía la "compra" a ningún lado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P0) |
+| TC-CARR-CARRITO-027 | [DEFECTO] "Finalizar compra" confirma la orden y vacía el carrito | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ⚠️ Automatizado (`test.fail()` - DEF-004) @P0 |
+| TC-CARR-CARRITO-028 | [DEFECTO] "Finalizar compra" no muestra error de submit al confirmar | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ⚠️ Automatizado (`test.fail()` - DEF-004) @P1 |
+| TC-CARR-CARRITO-029 | [DEFECTO] "Finalizar compra" crea una orden real (`GET /orders`) | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ⚠️ Automatizado (`test.fail()` - DEF-004) @P0 |
+| TC-CARR-CARRITO-030 | "Finalizar compra" no genera número de orden ni confirmación | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🗑️ OBSOLETE-SCENARIO (Stage 6) — premisa invertida por el backend |
+| TC-CARR-CARRITO-031 | "Finalizar compra" no persiste ni envía la "compra" a ningún lado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | — | 🗑️ OBSOLETE-SCENARIO (Stage 6) — premisa "sin backend" muerta |
 | TC-CARR-CARRITO-032 | El carrito con múltiples ítems distintos renderiza todas las líneas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-033 | El carrito es idéntico entre `index.html` y `product.html` | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-034 | El carrito persiste tras recargar la página | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
@@ -63,8 +66,8 @@ All 56 automated TCs (14 P0 + 42 P1-P3; 1 of them `test.fail()`-tagged for the D
 | TC-CARR-CARRITO-045 | El badge cuenta unidades totales, no líneas distintas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-046 | Dos líneas con cantidades 2 y 5 resultan en badge "7" | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
 | TC-CARR-CARRITO-047 | `#cart-items` tiene scroll propio cuando hay muchas líneas | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P3) |
-| TC-CARR-CARRITO-048 | No existe ningún paso de checkout real | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
-| TC-CARR-CARRITO-049 | No hay llamadas de red al abrir/operar el carrito | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-048 | El formulario de checkout renderiza con sus campos de dirección (reescrito; era "no existe checkout real") | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
+| TC-CARR-CARRITO-049 | Operar el carrito de invitado no dispara llamadas a la API | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P1) |
 | TC-CARR-CARRITO-050 | Abrir el carrito no cambia la URL de la página | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
 | TC-CARR-CARRITO-051 | El botón "Carrito" es accesible por teclado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
 | TC-CARR-CARRITO-052 | Los controles de cada línea son accesibles por teclado | qa/01-specifications/module-carrito/submodule-carrito/05-test-scenarios.md | tests/carrito/carrito.spec.ts | ✅ Automated (@P2) |
