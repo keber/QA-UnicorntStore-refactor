@@ -5,21 +5,21 @@
  * @plan qa/02-test-plans/sprints/Sprint-001/Plan-de-Pruebas-QA-UnicorntStore-refactor-Sprint-001-CAT.md
  * @priority P0-P3
  *
- * P0 (Stage 5 first pass) + P1-P3 (Stage 5 second pass, 2026-08-26). TC-CAT-DETALLE-050/051/052
- * (variantes/reseñas/productos relacionados) stay out of scope - `Tipo=Bloqueado` in the Plan de
- * Pruebas (features absent from the current app, pending business confirmation).
- * DEF-001 status (reconfirmed 2026-08-29 against the refactor): editing the qty field to >99
- * and adding is now clamped to 99 - TC-CAT-DETALLE-018 passes again as a normal `test()`.
- * Accumulating "Agregar al carrito" over an item already at 99 still overshoots to 100 -
- * TC-CAT-DETALLE-022 stays `test.fail()`, tracked as keber/unicornt-store-frontend#19.
- * TC-CAT-DETALLE-047 is `test.fail()`-tagged for DEF-003 (horizontal overflow at a 375px
- * viewport), tracked as keber/unicornt-store-frontend#21.
+ * Re-baselined for the refactored app (Stage 6 "green first", 2026-09-06 — see
+ * `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md` §3). The detail now
+ * renders async from API data into `#product-content` (`awaitLoaded()`). Invalid/out-of-range
+ * `id` still redirects silently to `index.html` — those scenarios are UNCHANGED.
+ *
+ * - TC-CAT-DETALLE-037 ("no /api calls") — REMOVED, OBSOLETE-SCENARIO.
+ * - TC-CAT-DETALLE-022 stays `test.fail()` for DEF-001 (keber/unicornt-store-frontend#19).
+ * - TC-CAT-DETALLE-047 stays `test.fail()` for DEF-003 (#21).
  */
 import { test, expect } from '../../fixtures/pom/test-options';
 
 test.describe('catálogo — detalle de producto', () => {
   test.beforeEach(async ({ productDetailPage, clearCart }) => {
     await productDetailPage.goto(1);
+    await productDetailPage.awaitLoaded();
     await clearCart();
   });
 
@@ -93,18 +93,9 @@ test.describe('catálogo — detalle de producto', () => {
     }
   );
 
-  test(
-    '[TC-CAT-DETALLE-037] No se observan llamadas de red a /api al cargar el detalle',
-    { tag: '@P0' },
-    async ({ page }) => {
-      const apiRequests: string[] = [];
-      page.on('request', (req) => {
-        if (req.url().includes('/api/')) apiRequests.push(req.url());
-      });
-      await page.reload({ waitUntil: 'networkidle' });
-      expect(apiRequests).toHaveLength(0);
-    }
-  );
+  // [TC-CAT-DETALLE-037] REMOVED — OBSOLETE-SCENARIO (Stage 6, 2026-09-06). The detail page now
+  // depends on `GET /api/v1/products` to render; "no /api calls" no longer describes correct
+  // behavior. See COVERAGE-MAPPING.md and the spec file's OBSOLETE-SCENARIO note.
 
   // ==================== P1-P3 (Stage 5, second pass) ====================
 
@@ -363,13 +354,16 @@ test.describe('catálogo — detalle de producto', () => {
     }
   );
 
-  test(
-    '[TC-CAT-DETALLE-033] id=49 (último producto válido) renderiza correctamente',
+  test.fail(
+    '[TC-CAT-DETALLE-033] id=49 (último producto válido) renderiza correctamente (DEF-007)',
     { tag: '@P1' },
-    async ({ productDetailPage }) => {
+    async ({ productDetailPage, page }) => {
       await productDetailPage.goto(49);
+      // Expected: the detail for product 49 renders. Actual (DEF-007): the detail looks the id
+      // up in the first API page (20 items) instead of GET /api/v1/products/49, so ids 21..49
+      // redirect to index.html. test.fail() - flip to test() when fixed.
+      await expect(page).toHaveURL(/product\.html\?id=49$/);
       await expect(productDetailPage.heading).toHaveText("Polera 'Quality Assurance Vol. 2'");
-      await expect(productDetailPage.price).toHaveText('$13.990');
     }
   );
 

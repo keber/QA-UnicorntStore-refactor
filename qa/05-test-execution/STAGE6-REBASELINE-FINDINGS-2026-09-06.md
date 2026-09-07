@@ -159,8 +159,9 @@ add while authed, and hydrate the offcanvas from `GET /cart` after login/merge.
 | TC-CARR-CARRITO-048 "real checkout step w/ address" (Group A) | partially real — assert the form renders + client-side validation; submit-success is a DEF-004 `test.fail()` |
 | Coverage report (`mcr.config.ts` etc.) | **park** — no sourcemaps on the deployed bundles, frontend build not in this repo |
 
-## 8. New defects to file
+## 8. New defects filed
 
-- **DEF-004 (High)** — checkout never succeeds through the UI (cart not synced to server / offcanvas not hydrated after merge). Frontend repo issue.
-- **DEF-005 (Low, optional)** — auth buttons render English text ("Sign in", "Create account") in a Spanish UI.
-- **DEF-006 (Low, optional)** — `badge-tazon` CSS class emitted on every category badge regardless of category.
+- **DEF-004 (High)** — checkout never succeeds through the UI (cart not synced to server / offcanvas not hydrated after merge). Frontend repo.
+- **DEF-005 (Low)** — auth buttons render English text ("Sign in", "Create account") in a Spanish UI.
+- **DEF-006 (Low)** — `badge-tazon` CSS class emitted on every category badge regardless of category.
+- **DEF-007 (High)** — `product.html` resolves the id against the first API page (20 items) instead of `GET /api/v1/products/{id}`, so products 21–49 (57% of the catalog) redirect to `index.html`. Found when TC-CAT-DETALLE-033 (id=49) failed. TC-CAT-DETALLE-033 is now a `test.fail()` guard.

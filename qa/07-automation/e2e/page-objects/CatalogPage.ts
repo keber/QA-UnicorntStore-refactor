@@ -6,13 +6,25 @@ import { expect, type Locator, type Page } from '@playwright/test';
  * @spec qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md
  *
  * Page Object for the home page / catalog listing (index.html, `#products`).
- * Observed live 2026-08-26 via playwright-cli:
- *   - Static HTML + Bootstrap 5.3.8 + vanilla JS (products.js/cart.js/app.js), no framework
- *   - No login, no backend/API - cart persists client-side in localStorage
- *   - 49 products rendered as `<article>` cards inside `ul[aria-label="Catálogo de productos"]`
- *   - "Agregar" adds qty 1 to the cart and shows a toast; cart badge updates
+ *
+ * Re-baselined 2026-09-06 against the refactored app (see
+ * `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md`):
+ *   - Catalog is now loaded async from `GET /api/v1/products` +
+ *     `GET /api/v1/categories`; `#product-list` carries `aria-busy` while
+ *     loading and drops the attribute when done. Always `awaitLoaded()`.
+ *   - The default view renders the API's first page only: **20 of 49**
+ *     products. No pagination UI.
+ *   - A `#category-filter` <select> (value = category slug) re-queries the
+ *     API (`?category=<slug>`) and re-renders a subset.
+ *   - Cards are still `<article>` inside `role=list` "Catálogo de productos";
+ *     cart still persists in `localStorage['unicornt_cart']` as `[{id,qty}]`.
  */
 export class CatalogPage {
+  /** API default page size — the storefront shows exactly this many with no filter. */
+  static readonly DEFAULT_PAGE_SIZE = 20;
+  /** Total seeded products (across all pages / categories). */
+  static readonly TOTAL_PRODUCTS = 49;
+
   constructor(private readonly page: Page) {}
 
   // ==================== Locators ====================
@@ -21,8 +33,17 @@ export class CatalogPage {
     return this.page.getByRole('heading', { name: 'Nuestros productos' });
   }
 
+  get productList(): Locator {
+    return this.page.getByRole('list', { name: 'Catálogo de productos' });
+  }
+
   get productCards(): Locator {
-    return this.page.getByRole('list', { name: 'Catálogo de productos' }).getByRole('article');
+    return this.productList.getByRole('article');
+  }
+
+  /** Category filter `<select>` — added by the refactor. */
+  get categoryFilter(): Locator {
+    return this.page.getByRole('combobox', { name: 'Filtrar por categoría' });
   }
 
   get cartButton(): Locator {
@@ -31,8 +52,7 @@ export class CatalogPage {
 
   get cartBadge(): Locator {
     // #cart-badge has no accessible role/label of its own (it's a bare count inside the
-    // Carrito button); the DOM id is the only stable identifier the app exposes for it,
-    // confirmed via live exploration.
+    // Carrito button); the DOM id is the only stable identifier the app exposes for it.
     // eslint-disable-next-line playwright/no-raw-locators
     return this.page.locator('#cart-badge');
   }
@@ -80,9 +100,35 @@ export class CatalogPage {
 
   // ==================== Actions ====================
 
-  /** Navigates to the catalog (home page). */
+  /** Navigates to the catalog (home page) and waits for the async product render. */
   async goto(): Promise<void> {
     await this.page.goto('/', { waitUntil: 'domcontentloaded' });
+    await this.awaitLoaded();
+  }
+
+  /**
+   * Waits out the async catalog load: the spinner skeleton (`aria-busy`) is
+   * replaced by real `<article>` cards.
+   */
+  async awaitLoaded(): Promise<void> {
+    await expect(this.productList).not.toHaveAttribute('aria-busy', 'true');
+    // "at least one card has rendered" - the skeleton <div> is not an <article>.
+    // eslint-disable-next-line playwright/no-nth-methods
+    await expect(this.productCards.first()).toBeVisible();
+  }
+
+  /**
+   * Selects a category by slug (`''` = "Todas las categorías") and waits for
+   * the API re-query + re-render to settle. Slugs: pm, cloud, devops,
+   * enigma, general, it-crowd, linux, personajes, programador, qa.
+   *
+   * The re-render toggles `#product-list`'s `aria-busy`; `awaitLoaded()` rides
+   * that out. Callers then assert the resulting card count (auto-retrying),
+   * which absorbs any brief stale-render window.
+   */
+  async filterByCategory(slug: string): Promise<void> {
+    await this.categoryFilter.selectOption(slug);
+    await this.awaitLoaded();
   }
 
   /** Product card at a given 0-based catalog position (not the product id). */
