@@ -2,7 +2,12 @@
 
 **Module code**: CAT
 **Submodule code**: DETALLE
-**Last updated**: 2026-08-26
+**Last updated**: 2026-09-06
+**version**: 1.1
+**change-summary**: Stage 6 "green first" — el detalle ahora se renderiza desde datos de la API
+(skeleton `.loading-skeleton__message` mientras carga) en `#product-content`. `id` inválido sigue
+redirigiendo a `index.html` (sin cambios). TC-037 (sin `/api`) → `OBSOLETE-SCENARIO`. Selectores
+nuevos en `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md` §3.
 
 ## Summary
 
@@ -822,7 +827,7 @@ copyright).
 
 ---
 
-### TC-CAT-DETALLE-037: No se observan llamadas de red a `/api` al cargar el detalle
+### TC-CAT-DETALLE-037: `OBSOLETE-SCENARIO` — No se observan llamadas de red a `/api` al cargar el detalle
 
 | Field | Value |
 |-------|-------|
@@ -832,15 +837,10 @@ copyright).
 | Automation | No |
 | Playwright | — |
 
-**Preconditions**: Ninguna.
+**Stage 6 (2026-09-06) — `OBSOLETE-SCENARIO`**: premisa invertida. El detalle **ahora depende**
+de la API (`GET /api/v1/products`) para renderizar. Archivo conservado; sin automatización.
 
-**Steps**:
-1. Navegar al detalle de cualquier producto con captura de network habilitada.
-2. Revisar todas las requests no estáticas.
-
-**Expected result**: 0 llamadas XHR/fetch a `/api/*`.
-
-**Notes**: —
+**Expected result** _(histórico, ya no válido)_: 0 llamadas XHR/fetch a `/api/*`.
 
 ---
 

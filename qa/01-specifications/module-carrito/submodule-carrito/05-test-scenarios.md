@@ -2,7 +2,12 @@
 
 **Module code**: CARR
 **Submodule code**: CARRITO
-**Last updated**: 2026-08-26
+**Last updated**: 2026-09-06
+**version**: 1.1
+**change-summary**: Stage 6 "green first" — "Finalizar compra" pasó de toast cosmético a
+checkout real (`POST /api/v1/orders`), hoy roto por DEF-004. TC-027/028/029 reflejan el
+comportamiento **correcto** esperado (guards `test.fail()`); TC-030/031/048 → `OBSOLETE-SCENARIO`.
+Detalle: `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md`.
 
 ## Summary
 
@@ -619,9 +624,14 @@ análogo `>99` NO se clampea en el flujo de "Agregar"). Verificado en esta sesi�
 2. Click en "Finalizar compra".
 3. Inspeccionar `unicornt_cart`.
 
-**Expected result**: `unicornt_cart` = `[]`.
+**Expected result**: Se confirma una orden vía `POST /api/v1/orders` (→ `201 CONFIRMED`) y el
+carrito queda vacío tras la confirmación.
 
-**Notes**: Ver RN-CARR-008.
+**Stage 6 (2026-09-06)**: comportamiento **correcto esperado**; hoy falla por **DEF-004** (el
+carrito del navegador nunca se sincroniza con el del servidor). Automatizado como `test.fail()`.
+El precondición ahora requiere una sesión autenticada (registro por corrida).
+
+**Notes**: Ver RN-CARR-008 (superseded — el checkout ya no es cosmético).
 
 ---
 
@@ -641,7 +651,10 @@ análogo `>99` NO se clampea en el flujo de "Agregar"). Verificado en esta sesi�
 1. Abrir el carrito.
 2. Click en "Finalizar compra".
 
-**Expected result**: El offcanvas se cierra (pierde la clase `show`).
+**Expected result**: Tras confirmar la compra, el offcanvas se cierra (pierde la clase `show`).
+
+**Stage 6 (2026-09-06)**: comportamiento **correcto esperado**; hoy falla por **DEF-004**.
+Automatizado como `test.fail()`. Requiere sesión autenticada.
 
 **Notes**: —
 
@@ -664,13 +677,18 @@ análogo `>99` NO se clampea en el flujo de "Agregar"). Verificado en esta sesi�
 2. Click en "Finalizar compra".
 3. Inspeccionar el DOM del toast.
 
-**Expected result**: El toast contiene `"¡Gracias por tu compra! Tu pedido está en camino. 🦄"`.
+**Expected result**: Se muestra una confirmación de éxito (toast de éxito y/o número de orden
+devuelto por `POST /api/v1/orders`).
 
-**Notes**: Verificado en esta sesión.
+**Stage 6 (2026-09-06)**: el toast literal "¡Gracias por tu compra! …" fue **eliminado** en el
+refactor. Comportamiento correcto esperado = alguna confirmación de éxito; hoy falla por
+**DEF-004**. Automatizado como `test.fail()`. Requiere sesión autenticada.
+
+**Notes**: —
 
 ---
 
-### TC-CARR-CARRITO-030: "Finalizar compra" no genera número de orden ni confirmación
+### TC-CARR-CARRITO-030: `OBSOLETE-SCENARIO` — "Finalizar compra" no genera número de orden ni confirmación
 
 | Field | Value |
 |-------|-------|
@@ -680,21 +698,20 @@ análogo `>99` NO se clampea en el flujo de "Agregar"). Verificado en esta sesi�
 | Automation | No |
 | Playwright | — |
 
-**Preconditions**: `unicornt_cart` con al menos un ítem.
+**Stage 6 (2026-09-06) — `OBSOLETE-SCENARIO`**: la premisa se **invirtió**. El refactor agregó un
+backend de órdenes: `POST /api/v1/orders` devuelve `{id,status:"CONFIRMED",total}` y `GET
+/api/v1/orders` lista la orden. El comportamiento correcto (se genera una orden real) está
+cubierto por la reescritura de TC-CARR-CARRITO-027/029 como guards `test.fail()` de DEF-004.
+Archivo conservado; sin automatización.
 
-**Steps**:
-1. Abrir el carrito.
-2. Click en "Finalizar compra".
-3. Buscar cualquier número de orden o página/sección de confirmación.
+**Preconditions** _(histórico)_: `unicornt_cart` con al menos un ítem.
 
-**Expected result**: No existe ningún número de orden ni página de confirmación — solo el toast y
-el carrito vacío.
-
-**Notes**: Confirma hallazgo de arquitectura.
+**Expected result** _(histórico, ya no válido)_: No existe ningún número de orden ni página de
+confirmación — solo el toast y el carrito vacío.
 
 ---
 
-### TC-CARR-CARRITO-031: "Finalizar compra" no persiste ni envía la "compra" a ningún lado
+### TC-CARR-CARRITO-031: `OBSOLETE-SCENARIO` — "Finalizar compra" no persiste ni envía la "compra"
 
 | Field | Value |
 |-------|-------|
@@ -704,17 +721,11 @@ el carrito vacío.
 | Automation | No |
 | Playwright | — |
 
-**Preconditions**: `unicornt_cart` con al menos un ítem, captura de red habilitada.
+**Stage 6 (2026-09-06) — `OBSOLETE-SCENARIO`**: la premisa ("cero llamadas de red, sin backend")
+ya no aplica — el checkout hace `POST /api/v1/orders`. Archivo conservado; sin automatización.
 
-**Steps**:
-1. Abrir el carrito.
-2. Click en "Finalizar compra".
-3. Revisar todas las requests de red y las claves de `localStorage`.
-
-**Expected result**: 0 llamadas XHR/fetch; ninguna clave nueva de `localStorage` registra la
-"compra" (solo `unicornt_cart` queda en `[]`).
-
-**Notes**: —
+**Expected result** _(histórico, ya no válido)_: 0 llamadas XHR/fetch; ninguna clave nueva de
+`localStorage` registra la "compra".
 
 ---
 
@@ -1082,26 +1093,24 @@ líneas en esta sesión.
 
 ---
 
-### TC-CARR-CARRITO-048: No existe ningún paso de checkout real
+### TC-CARR-CARRITO-048: `OBSOLETE-SCENARIO` — No existe ningún paso de checkout real
 
 | Field | Value |
 |-------|-------|
 | Priority | P1 |
 | Type | Negative |
 | Origin | UI-OBSERVED |
-| Automation | No |
-| Playwright | — |
+| Automation | Parcial |
+| Playwright | `carrito.spec.ts` |
 
-**Preconditions**: `unicornt_cart` con al menos un ítem.
+**Stage 6 (2026-09-06) — `OBSOLETE-SCENARIO`**: el paso de checkout **ahora existe** —
+`#checkout-form` en `#cart-footer` con campos `fullName`, `email`, `street`, `city`, `region`,
+`zipCode` (opcional). La automatización que queda asevera que el formulario renderiza y valida
+del lado del cliente (pasa); el submit exitoso es un guard `test.fail()` de **DEF-004**. Archivo
+conservado.
 
-**Steps**:
-1. Abrir el carrito.
-2. Buscar cualquier campo de dirección de envío, medio de pago o cupón.
-
-**Expected result**: No existe ninguno de esos controles — "Finalizar compra" es un botón único
-y directo.
-
-**Notes**: —
+**Expected result** _(histórico, ya no válido)_: No existe ninguno de esos controles —
+"Finalizar compra" es un botón único y directo.
 
 ---
 
