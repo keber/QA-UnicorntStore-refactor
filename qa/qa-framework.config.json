@@ -4,10 +4,10 @@
   "project": {
     "name": "QA-UnicorntStore-refactor",
     "displayName": "QA-UnicorntStore-refactor",
-    "description": "Unicorn't Store: tienda geek de poleras/tazones con memes tech. Sitio front-end puro (sin login, sin backend/API), a validar con E2E antes de un refactor que cambiará la tecnología de base (referencia de arquitectura destino: https://neonpulse.keber.dev/, posiblemente con framework SPA encima).",
-    "qaBaseUrl": "https://unicornt-store.keber.cl",
-    "techStack": "Actual: HTML5 estático multi-página (index.html, product.html) + Bootstrap 5.3.8 + JavaScript vanilla (products.js/cart.js/app.js, sin build step, sin framework) + Font Awesome 6. Carrito persistido en localStorage (clave unicornt_cart). Sin backend/API. Confirmado vía exploración en vivo el 2026-08-26 (ver qa/memory/).",
-    "loginPath": null
+    "description": "Unicorn't Store: tienda geek de poleras con memes tech. Post-refactor 2026-09-06: app Vite multipágina (index/product/login/register.html) + backend REST real (Spring Boot + JWT). La suite E2E apunta al stack QA aislado (unicornt-qa.keber.cl + api-unicornt-qa.keber.cl). Ver qa/memory/arquitectura-unicornstore-2026-09-06.md.",
+    "qaBaseUrl": "https://unicornt-qa.keber.cl",
+    "techStack": "Frontend: Vite multipágina (index.html, product.html, login.html, register.html) + Bootstrap 5 (bundleado) + Font Awesome 6 (CDN). Catálogo cargado async de GET /api/v1/products (paginado, filtro ?category). Carrito de invitado en localStorage (clave unicornt_cart, [{id,qty}]); token JWT en localStorage.unicornt.auth.token. Backend: Spring Boot 4 + Spring Security + JWT + Postgres + Flyway; contrato en unicornt-store-backend/docs/openapi.json. Confirmado vía exploración en vivo del stack QA el 2026-09-06.",
+    "loginPath": "/login.html"
   },
   "modules": [
     {

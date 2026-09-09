@@ -5,24 +5,26 @@
  * @plan qa/02-test-plans/sprints/Sprint-001/Plan-de-Pruebas-QA-UnicorntStore-refactor-Sprint-001-CAT.md
  * @priority P0-P3
  *
- * P0 (Stage 5 first pass) + P1-P3 (Stage 5 second pass, 2026-08-26). TC-CAT-LISTADO-013
- * (categoría "Tazón") stays out of scope - `Tipo=Bloqueado` in the Plan de Pruebas (feature
- * absent from the current catalog, pending business confirmation). TC-CAT-LISTADO-027 is
- * `test.fail()`-tagged for DEF-001 (max qty not clamped when "Agregar" accumulates over an item
- * already at 99) - reconfirmed 2026-08-29 against the refactor, tracked as
- * keber/unicornt-store-frontend#19.
+ * Re-baselined for the refactored app (Stage 6 "green first", 2026-09-06 — see
+ * `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md`). The catalog is
+ * now loaded async from `GET /api/v1/products` and the default view renders the
+ * API's first page only: **20 of 49** products. A `#category-filter` <select>
+ * re-queries the API by category slug.
  *
- * TC-CAT-LISTADO-039 is `test.fixme()`-tagged as OBSOLETE after the frontend refactor
- * (backend-integration prep): a real <form> (contact) now exists, so the "no contact form"
- * assertion no longer holds. Behavior still in flux; Stage 6 (qa-maintenance) will update specs
- * + memory and replace it with positive form coverage. Tracking: qa/AGENT-NEXT-STEPS.md ->
- * "Mantenimiento pendiente (refactor frontend)".
+ * - TC-CAT-LISTADO-040 ("no /api calls") — REMOVED, OBSOLETE-SCENARIO (the page now
+ *   depends on the API). Tracked in COVERAGE-MAPPING.md.
+ * - TC-CAT-LISTADO-039 ("no contact <form>") — REMOVED, OBSOLETE-SCENARIO.
+ * - TC-CAT-LISTADO-014 — inverted: a category filter now exists.
+ * - TC-CAT-LISTADO-027 stays `test.fail()` for DEF-001 (keber/unicornt-store-frontend#19).
  */
 import { test, expect } from '../../fixtures/pom/test-options';
+import { CatalogPage } from '../../page-objects/CatalogPage';
+
+const PAGE_SIZE = CatalogPage.DEFAULT_PAGE_SIZE; // 20
 
 test.describe('catálogo — listado de productos', () => {
-  test.beforeEach(async ({ page, clearCart }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+  test.beforeEach(async ({ catalogPage, clearCart }) => {
+    await catalogPage.goto();
     await clearCart();
   });
 
@@ -31,10 +33,10 @@ test.describe('catálogo — listado de productos', () => {
   });
 
   test(
-    '[TC-CAT-LISTADO-005] El catálogo renderiza exactamente 49 productos',
+    '[TC-CAT-LISTADO-005] El catálogo renderiza la primera página (20 de 49 productos)',
     { tag: '@P0' },
     async ({ catalogPage }) => {
-      await expect(catalogPage.productCards).toHaveCount(49);
+      await expect(catalogPage.productCards).toHaveCount(PAGE_SIZE);
     }
   );
 
@@ -58,8 +60,8 @@ test.describe('catálogo — listado de productos', () => {
     '[TC-CAT-LISTADO-010] Cada tarjeta incluye "Ver más" y "Agregar"',
     { tag: '@P0' },
     async ({ page }) => {
-      await expect(page.getByRole('link', { name: 'Ver más' })).toHaveCount(49);
-      await expect(page.getByRole('button', { name: 'Agregar' })).toHaveCount(49);
+      await expect(page.getByRole('link', { name: 'Ver más' })).toHaveCount(PAGE_SIZE);
+      await expect(page.getByRole('button', { name: 'Agregar' })).toHaveCount(PAGE_SIZE);
     }
   );
 
@@ -107,6 +109,7 @@ test.describe('catálogo — listado de productos', () => {
     async ({ catalogPage, page }) => {
       await catalogPage.addToCart(catalogPage.cardAt(0));
       await page.reload({ waitUntil: 'domcontentloaded' });
+      await catalogPage.awaitLoaded();
       await expect(catalogPage.cartBadge).toHaveText('1');
       const cart = await page.evaluate(() => localStorage.getItem('unicornt_cart'));
       expect(JSON.parse(cart ?? '[]')).toEqual([{ id: 1, qty: 1 }]);
@@ -114,29 +117,22 @@ test.describe('catálogo — listado de productos', () => {
   );
 
   test(
-    '[TC-CAT-LISTADO-040] No se observan llamadas de red a /api',
-    { tag: '@P0' },
-    async ({ page }) => {
-      const apiRequests: string[] = [];
-      page.on('request', (req) => {
-        if (req.url().includes('/api/')) apiRequests.push(req.url());
-      });
-      await page.reload({ waitUntil: 'networkidle' });
-      expect(apiRequests).toHaveLength(0);
-    }
-  );
-
-  test(
     '[TC-CAT-LISTADO-041] No existe ningún control de login/registro en el header',
-    { tag: '@P0' },
+    { tag: '@P1' },
     async ({ page }) => {
-      const loginPattern = /iniciar sesi[oó]n|log ?in|registr(o|arse)/i;
-      await expect(page.getByRole('link', { name: loginPattern })).toHaveCount(0);
-      await expect(page.getByRole('button', { name: loginPattern })).toHaveCount(0);
+      // The refactor added login.html / register.html, but they are reachable by direct URL
+      // only — the navbar still exposes no session control (even when authenticated).
+      const loginPattern = /iniciar sesi[oó]n|log ?in|registr(o|arse)|sign ?in/i;
+      await expect(page.getByRole('banner').getByRole('link', { name: loginPattern })).toHaveCount(
+        0
+      );
+      await expect(
+        page.getByRole('banner').getByRole('button', { name: loginPattern })
+      ).toHaveCount(0);
     }
   );
 
-  // ==================== P1-P3 (Stage 5, second pass) ====================
+  // ==================== P1-P3 ====================
 
   test(
     '[TC-CAT-LISTADO-001] La página carga con el título correcto en la pestaña',
@@ -161,8 +157,6 @@ test.describe('catálogo — listado de productos', () => {
     '[TC-CAT-LISTADO-003] El skip link enfoca el contenido principal',
     { tag: '@P3' },
     async ({ catalogPage, page }) => {
-      // `.visually-hidden-focusable` keeps the link off-screen until it receives keyboard
-      // focus - a plain .click() fails Playwright's "element in viewport" actionability check.
       await catalogPage.skipLink.focus();
       await page.keyboard.press('Enter');
       await expect(page).toHaveURL(/#products$/);
@@ -184,8 +178,7 @@ test.describe('catálogo — listado de productos', () => {
     '[TC-CAT-LISTADO-006] Cada tarjeta muestra una imagen con alt igual al nombre del producto',
     { tag: '@P2' },
     async ({ catalogPage }) => {
-      // Sample: first, last, and one middle card - not all 49, per the Plan de Pruebas sampling note.
-      for (const index of [0, 24, 48]) {
+      for (const index of [0, 10, PAGE_SIZE - 1]) {
         const card = catalogPage.cardAt(index);
         const name = (await card.getByRole('heading', { level: 3 }).textContent()) ?? '';
         await expect(card.getByRole('img')).toHaveAttribute('alt', name.trim());
@@ -194,13 +187,18 @@ test.describe('catálogo — listado de productos', () => {
   );
 
   test(
-    '[TC-CAT-LISTADO-007] Cada tarjeta muestra el badge de categoría "Polera"',
+    '[TC-CAT-LISTADO-007] Cada tarjeta muestra un badge con el nombre de su categoría',
     { tag: '@P1' },
     async ({ catalogPage, page }) => {
-      // The category badge (`<span class="badge">`) has no ARIA role of its own; scoping to
-      // `.badge` avoids matching the substring "Polera" inside each card's own <h3> name.
+      // Post-refactor the badge shows the product's real `categoryName` (10 categories), not the
+      // old fixed "Polera". Scope to `.badge` — no ARIA role of its own.
       // eslint-disable-next-line playwright/no-raw-locators
-      await expect(catalogPage.productCards.locator('.badge')).toHaveText(Array(49).fill('Polera'));
+      const badges = catalogPage.productCards.locator('.badge');
+      await expect(badges).toHaveCount(PAGE_SIZE);
+      const known = ['PM', 'Cloud', 'DevOps', 'Enigma', 'General', 'IT Crowd', 'Linux'];
+      for (const text of await badges.allInnerTexts()) {
+        expect(known).toContain(text.trim());
+      }
       await expect(page.getByText('Tazón')).toHaveCount(0);
     }
   );
@@ -209,7 +207,7 @@ test.describe('catálogo — listado de productos', () => {
     '[TC-CAT-LISTADO-009] El precio se muestra en formato CLP "$XX.990"',
     { tag: '@P1' },
     async ({ catalogPage }) => {
-      for (const index of [0, 24, 48]) {
+      for (const index of [0, 10, PAGE_SIZE - 1]) {
         await expect(catalogPage.cardAt(index).getByText(/\$\d{1,2}\.\d{3}/)).toBeVisible();
       }
     }
@@ -231,36 +229,53 @@ test.describe('catálogo — listado de productos', () => {
   );
 
   test(
-    '[TC-CAT-LISTADO-012] El último producto (49°) de la grilla es id=49',
+    '[TC-CAT-LISTADO-012] Filtrar por categoría "QA" muestra sus 2 productos (ids 48 y 49)',
     { tag: '@P2' },
     async ({ catalogPage }) => {
-      const card = catalogPage.cardAt(48);
-      await expect(card.getByRole('link', { name: 'Ver más' })).toHaveAttribute(
+      await catalogPage.filterByCategory('qa');
+      await expect(catalogPage.productCards).toHaveCount(2);
+      await expect(catalogPage.cardAt(0).getByRole('link', { name: 'Ver más' })).toHaveAttribute(
+        'href',
+        'product.html?id=48'
+      );
+      await expect(catalogPage.cardAt(1).getByRole('link', { name: 'Ver más' })).toHaveAttribute(
         'href',
         'product.html?id=49'
       );
-      await expect(card.getByRole('heading', { level: 3 })).toHaveText(
+      await expect(catalogPage.cardAt(1).getByRole('heading', { level: 3 })).toHaveText(
         "Polera 'Quality Assurance Vol. 2'"
       );
     }
   );
 
   test(
-    '[TC-CAT-LISTADO-014] No existen controles de búsqueda, filtro ni paginación',
+    '[TC-CAT-LISTADO-014] Existe un filtro por categoría (re-consulta la API); no hay buscador ni paginación',
     { tag: '@P2' },
-    async ({ page }) => {
+    async ({ catalogPage, page }) => {
+      // Inverted from the pre-refactor "no filters at all". The category <select> is the only
+      // catalog control; there is still no free-text search box and no pagination nav.
+      await expect(catalogPage.categoryFilter).toBeVisible();
       await expect(page.getByRole('searchbox')).toHaveCount(0);
-      await expect(page.getByRole('combobox')).toHaveCount(0);
       await expect(page.getByRole('navigation', { name: /pagina/i })).toHaveCount(0);
+      // it actually filters: "devops" has 6 seeded products; clearing restores the first page.
+      await catalogPage.filterByCategory('devops');
+      await expect(catalogPage.productCards).toHaveCount(6);
+      await catalogPage.filterByCategory('');
+      await expect(catalogPage.productCards).toHaveCount(PAGE_SIZE);
     }
   );
 
   test(
-    '[TC-CAT-LISTADO-016] "Ver más" del último producto navega a product.html?id=49',
+    '[TC-CAT-LISTADO-016] "Ver más" del último producto (id=49, vía filtro QA) enlaza a product.html?id=49',
     { tag: '@P1' },
-    async ({ catalogPage, page }) => {
-      await catalogPage.cardAt(48).getByRole('link', { name: 'Ver más' }).click();
-      await expect(page).toHaveURL(/product\.html\?id=49$/);
+    async ({ catalogPage }) => {
+      await catalogPage.filterByCategory('qa');
+      // Only the href is asserted here: navigating to the detail of id 49 currently redirects to
+      // index.html (DEF-007). That the detail itself renders is TC-CAT-DETALLE-033 (test.fail).
+      await expect(catalogPage.cardAt(1).getByRole('link', { name: 'Ver más' })).toHaveAttribute(
+        'href',
+        'product.html?id=49'
+      );
     }
   );
 
@@ -270,9 +285,6 @@ test.describe('catálogo — listado de productos', () => {
     async ({ catalogPage }) => {
       const link = catalogPage.cardAt(0).getByRole('link', { name: 'Ver más' });
       await expect(link).toBeVisible();
-      // The icon is a Font Awesome `::before` pseudo-element, not a DOM text node - textContent
-      // reflects only the real text. (Chromium's accessible-name computation for {name: ...,
-      // exact: true} does pick up the icon's generated glyph, so that variant is avoided here.)
       await expect(link).toHaveText('Ver más');
     }
   );
@@ -284,7 +296,8 @@ test.describe('catálogo — listado de productos', () => {
       await catalogPage.cardAt(0).getByRole('link', { name: 'Ver más' }).click();
       await expect(page).toHaveURL(/product\.html\?id=1$/);
       await page.goBack();
-      await expect(catalogPage.productCards).toHaveCount(49);
+      await catalogPage.awaitLoaded();
+      await expect(catalogPage.productCards).toHaveCount(PAGE_SIZE);
     }
   );
 
@@ -315,7 +328,6 @@ test.describe('catálogo — listado de productos', () => {
     { tag: '@P3' },
     async ({ catalogPage }) => {
       await catalogPage.addToCart(catalogPage.cardAt(0));
-      // showCartToast() uses a 2500ms Bootstrap autohide delay (assets/js/cart.js).
       await expect(catalogPage.toast).toBeHidden({ timeout: 6000 });
     }
   );
@@ -355,13 +367,11 @@ test.describe('catálogo — listado de productos', () => {
         localStorage.setItem('unicornt_cart', JSON.stringify([{ id: 1, qty: 99 }]))
       );
       await page.reload({ waitUntil: 'domcontentloaded' });
+      await catalogPage.awaitLoaded();
       await catalogPage.addToCart(catalogPage.cardAt(0));
       const cart = await page.evaluate(() => localStorage.getItem('unicornt_cart'));
-      // Expected (per RN-CAT-004): qty debería permanecer en 99.
-      // Actual (DEF-001, reconfirmado 2026-08-29 contra el refactor): qty sube a 100 - el flujo
-      // "Agregar" no clampea el máximo al acumular sobre un ítem ya en 99.
-      // Issue: keber/unicornt-store-frontend#19. `test.fail()`: cuando se corrija, Playwright
-      // marcará "expected to fail - passed"; pasar entonces a `test()` normal.
+      // Expected (RN-CAT-004): qty stays 99. Actual (DEF-001, keber/unicornt-store-frontend#19):
+      // qty goes to 100. `test.fail()` — flip to `test()` when the issue is fixed.
       expect(JSON.parse(cart ?? '[]')).toEqual([{ id: 1, qty: 99 }]);
     }
   );
@@ -373,6 +383,7 @@ test.describe('catálogo — listado de productos', () => {
       await catalogPage.addToCart(catalogPage.cardAt(0));
       await catalogPage.cardAt(0).getByRole('link', { name: 'Ver más' }).click();
       await page.getByRole('link', { name: 'Volver' }).click();
+      await catalogPage.awaitLoaded();
       const cart = await page.evaluate(() => localStorage.getItem('unicornt_cart'));
       expect(JSON.parse(cart ?? '[]')).toEqual([{ id: 1, qty: 1 }]);
     }
@@ -383,9 +394,6 @@ test.describe('catálogo — listado de productos', () => {
     { tag: '@P1' },
     async ({ catalogPage }) => {
       await expect(catalogPage.cartBadge).toBeHidden();
-      // The exact accessible name has a leading-space quirk from the icon's generated glyph
-      // (Chromium accname, same as TC-CAT-LISTADO-017) - the meaningful assertion here is that
-      // no badge count digit leaks into it, not the exact surrounding whitespace.
       await expect(catalogPage.cartButton).not.toHaveAccessibleName(/\d/);
     }
   );
@@ -421,8 +429,6 @@ test.describe('catálogo — listado de productos', () => {
     '[TC-CAT-LISTADO-034] El footer muestra la descripción de la tienda',
     { tag: '@P3' },
     async ({ catalogPage }) => {
-      // The footer also has "Unicorn't Store" in its copyright line (TC-CAT-LISTADO-038) -
-      // scope to the brand heading to keep this a single-element match.
       await expect(
         catalogPage.footer.getByRole('heading', { name: "Unicorn't Store" })
       ).toBeVisible();
@@ -454,7 +460,6 @@ test.describe('catálogo — listado de productos', () => {
       await expect(catalogPage.footer.getByText('Av. Internet 404, Santiago')).toBeVisible();
       await expect(catalogPage.footer.getByText('hola@unicorntstore.cl')).toBeVisible();
       await expect(catalogPage.footer.getByText('+56 9 1234 5678')).toBeVisible();
-      // Confirms they're plain text, not mailto:/tel: links - absence check, not an interaction target.
       // eslint-disable-next-line playwright/no-raw-locators
       await expect(page.locator('a[href^="mailto:"], a[href^="tel:"]')).toHaveCount(0);
     }
@@ -480,20 +485,6 @@ test.describe('catálogo — listado de productos', () => {
     }
   );
 
-  // [OBSOLETO - refactor frontend, aún en flujo] El refactor agregó un <form> real (contacto /
-  // prep de integración con backend). Este TC aseguraba su ausencia y ya no aplica; en Stage 6
-  // (qa-maintenance) se reemplaza por cobertura positiva del formulario. Ver el bloque de
-  // cabecera del archivo y qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente (refactor frontend)".
-  test.fixme(
-    '[TC-CAT-LISTADO-039] No existe ningún formulario de contacto real',
-    { tag: '@P2' },
-    async ({ page }) => {
-      // A bare, unlabeled <form> has no distinguishing ARIA role - existence check only.
-      // eslint-disable-next-line playwright/no-raw-locators
-      await expect(page.locator('form')).toHaveCount(0);
-    }
-  );
-
   test(
     '[TC-CAT-LISTADO-042] El botón "Agregar" es accesible por teclado',
     { tag: '@P2' },
@@ -512,20 +503,20 @@ test.describe('catálogo — listado de productos', () => {
       await expect(
         page.getByRole('heading', { level: 2, name: 'Nuestros productos' })
       ).toBeVisible();
-      await expect(page.getByRole('heading', { level: 3 })).toHaveCount(49);
+      await expect(page.getByRole('heading', { level: 3 })).toHaveCount(PAGE_SIZE);
     }
   );
 
   test(
     '[TC-CAT-LISTADO-044] La consola no muestra errores críticos de aplicación al cargar',
     { tag: '@P1' },
-    async ({ page }) => {
+    async ({ catalogPage, page }) => {
       const errors: string[] = [];
       page.on('console', (msg) => {
-        // favicon.ico 404 is a known, non-blocking finding common to the whole site.
         if (msg.type() === 'error' && !msg.text().includes('favicon')) errors.push(msg.text());
       });
-      await page.reload({ waitUntil: 'networkidle' });
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await catalogPage.awaitLoaded();
       expect(errors).toEqual([]);
     }
   );
@@ -536,7 +527,8 @@ test.describe('catálogo — listado de productos', () => {
     async ({ catalogPage, page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.reload({ waitUntil: 'domcontentloaded' });
-      await expect(catalogPage.productCards).toHaveCount(49);
+      await catalogPage.awaitLoaded();
+      await expect(catalogPage.productCards).toHaveCount(PAGE_SIZE);
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(scrollWidth).toBeLessThanOrEqual(376);
     }
@@ -546,9 +538,9 @@ test.describe('catálogo — listado de productos', () => {
     '[TC-CAT-LISTADO-046] La cantidad de tarjetas visibles no cambia con el viewport',
     { tag: '@P3' },
     async ({ catalogPage, page }) => {
-      await expect(catalogPage.productCards).toHaveCount(49);
+      await expect(catalogPage.productCards).toHaveCount(PAGE_SIZE);
       await page.setViewportSize({ width: 375, height: 812 });
-      await expect(catalogPage.productCards).toHaveCount(49);
+      await expect(catalogPage.productCards).toHaveCount(PAGE_SIZE);
     }
   );
 
@@ -565,14 +557,14 @@ test.describe('catálogo — listado de productos', () => {
   );
 
   test(
-    '[TC-CAT-LISTADO-048] El id de "Ver más" coincide con el orden de renderizado (1..49)',
+    '[TC-CAT-LISTADO-048] El id de "Ver más" coincide con el orden de renderizado (1..20)',
     { tag: '@P2' },
     async ({ page }) => {
       const hrefs = await page
         .getByRole('link', { name: 'Ver más' })
         .evaluateAll((els) => els.map((el) => el.getAttribute('href')));
       const ids = hrefs.map((href) => Number(new URLSearchParams(href?.split('?')[1]).get('id')));
-      expect(ids).toEqual(Array.from({ length: 49 }, (_, i) => i + 1));
+      expect(ids).toEqual(Array.from({ length: PAGE_SIZE }, (_, i) => i + 1));
     }
   );
 
@@ -592,7 +584,7 @@ test.describe('catálogo — listado de productos', () => {
     '[TC-CAT-LISTADO-050] Descripciones largas no rompen el layout de la tarjeta',
     { tag: '@P3' },
     async ({ catalogPage, page }) => {
-      const card = catalogPage.cardAt(8); // id=9, "Enigma Blueprint" - longest description in the catalog
+      const card = catalogPage.cardAt(8); // id=9, "Enigma Blueprint" - long description
       await expect(card.getByRole('heading', { level: 3 })).toHaveText("Polera 'Enigma Blueprint'");
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       const viewportWidth = page.viewportSize()?.width ?? 0;

@@ -76,7 +76,17 @@ export function uniqueName(prefix: string): string {
   return `${prefix}-${execIdx()}`;
 }
 
-/** Unique email address for test isolation (uses execIdx). */
+// Process-local monotonic counter so two calls in the same millisecond
+// (parallel workers, tight loops) still differ. `execIdx()` keeps the
+// value roughly time-sortable for triage in the QA database.
+let _uniqueSeq = 0;
+
+/**
+ * Globally-unique email for test isolation. The app's `POST /auth/register`
+ * rejects a duplicate with 409, so uniqueness must be per-call, not
+ * per-minute — hence the counter + timestamp tail on top of `execIdx()`.
+ */
 export function uniqueEmail(domain = 'qa-test.example.com'): string {
-  return `qa-user-${execIdx()}@${domain}`;
+  _uniqueSeq += 1;
+  return `qa-user-${execIdx()}-${Date.now().toString(36)}-${_uniqueSeq}@${domain}`;
 }

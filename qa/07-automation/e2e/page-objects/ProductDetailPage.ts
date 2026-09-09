@@ -6,12 +6,18 @@ import { expect, type Locator, type Page } from '@playwright/test';
  * @spec qa/01-specifications/module-catalogo/submodule-detalle/00-inventory.md
  *
  * Page Object for the product detail page (`product.html?id={id}`).
- * Observed live 2026-08-26 via playwright-cli:
- *   - Quantity selector: `#qty-input` (`min="1" max="99"`), "Reducir cantidad"/"Aumentar
- *     cantidad" buttons clamp correctly at the boundaries.
- *   - Invalid/out-of-range `id` (absent, non-numeric, 0, negative, >49) redirects silently
- *     to `index.html` - no error message, no dedicated 404.
- *   - "Agregar al carrito" reuses the same toast/badge as the catalog listing.
+ *
+ * Re-baselined 2026-09-06 (Stage 6, see
+ * `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md` §3):
+ *   - The detail now renders async from API data into `#product-content`
+ *     (spinner `.loading-skeleton__message` "Cargando producto..."). Call
+ *     `awaitLoaded()` after `goto()` for a valid id.
+ *   - Quantity selector `#qty-input` (`min="1" max="99"`), +/- buttons clamp
+ *     at the boundaries — UNCHANGED.
+ *   - Invalid/out-of-range `id` (absent, non-numeric, 0, negative, >49)
+ *     still redirects silently to `index.html` — UNCHANGED.
+ *   - "Agregar al carrito" reuses the catalog toast/badge; cart stays in
+ *     `localStorage['unicornt_cart']`.
  */
 export class ProductDetailPage {
   constructor(private readonly page: Page) {}
@@ -114,13 +120,24 @@ export class ProductDetailPage {
 
   // ==================== Actions ====================
 
-  /** Navigates to the detail page for a given product id (or an arbitrary raw value for boundary TCs). */
+  /**
+   * Navigates to the detail page for a given product id (or an arbitrary raw
+   * value for boundary TCs). Does NOT wait for the async render — call
+   * `awaitLoaded()` for a valid id, or assert the redirect for an invalid one.
+   */
   async goto(id: number | string): Promise<void> {
     await this.page.goto(`/product.html?id=${id}`, { waitUntil: 'domcontentloaded' });
   }
 
+  /** Waits out the async detail render (skeleton → real content). */
+  async awaitLoaded(): Promise<void> {
+    await expect(this.addToCartButton).toBeVisible();
+    await expect(this.heading).toBeVisible();
+  }
+
   /** Clicks "Agregar al carrito" and waits for the confirmation toast. */
   async addToCart(): Promise<void> {
+    await this.awaitLoaded();
     await this.addToCartButton.click();
     await expect(this.addedToCartToast).toBeVisible();
   }

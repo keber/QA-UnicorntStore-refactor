@@ -6,17 +6,19 @@ import { type Locator, type Page } from '@playwright/test';
  * @spec qa/01-specifications/module-carrito/submodule-carrito/00-inventory.md
  *
  * Page Object for the cart offcanvas (`#cartOffcanvas`), present identically on every
- * page of the site (index.html and product.html). Observed live 2026-08-26 via
- * playwright-cli:
- *   - Empty state: `#cart-items` shows "El carrito está vacío."; `#cart-footer` is
- *     `display:none` until the cart has at least one item.
- *   - Each line (`.cart-item[data-id]`) has its own qty stepper (`.btn-cart-minus`,
- *     `.cart-qty-input`, `.btn-cart-plus`) and "Eliminar" button - unlike the detail
- *     page's selector, "−" at qty=1 removes the line instead of blocking at 1.
- *   - Manual edits to `.cart-qty-input` correctly clamp/sanitize (unlike the
- *     listado/detalle "Agregar" flow, see DEF-001).
- *   - "Finalizar compra" and "Vaciar carrito" reuse the same `#cart-toast` element as the
- *     catalog's "added to cart" toast, with a different message.
+ * page of the site (index.html and product.html).
+ *
+ * Re-baselined 2026-09-06 (Stage 6, see
+ * `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md` §4):
+ *   - Guest cart ops (add / qty / remove / total / clear) still work and are
+ *     `localStorage['unicornt_cart']`-driven — selectors UNCHANGED.
+ *   - "Finalizar compra" is now a real checkout `<form id="checkout-form">`
+ *     (address fields) → `POST /api/v1/orders`. It is **broken end-to-end**
+ *     (DEF-004): the browser cart is never synced to the server cart, so the
+ *     order always fails. `fillCheckout()` + `submitCheckout()` drive the form;
+ *     the success path is covered only by `test.fail()` guards.
+ *   - Empty state: `#cart-items` shows "El carrito está vacío."; `#cart-footer`
+ *     is hidden until the cart has ≥1 item.
  */
 export class CartPage {
   constructor(private readonly page: Page) {}
@@ -78,6 +80,45 @@ export class CartPage {
     return this.page.getByRole('button', { name: 'Vaciar carrito' });
   }
 
+  // ---------- Checkout form (added by the refactor) ----------
+
+  get checkoutForm(): Locator {
+    // Bare <form>, no accessible name.
+    // eslint-disable-next-line playwright/no-raw-locators
+    return this.page.locator('#checkout-form');
+  }
+
+  get checkoutFullName(): Locator {
+    return this.page.getByLabel('Nombre completo');
+  }
+
+  get checkoutEmail(): Locator {
+    return this.checkoutForm.getByLabel('Email');
+  }
+
+  get checkoutStreet(): Locator {
+    return this.page.getByLabel('Calle y número');
+  }
+
+  get checkoutCity(): Locator {
+    return this.page.getByLabel('Ciudad');
+  }
+
+  get checkoutRegion(): Locator {
+    return this.page.getByLabel('Región');
+  }
+
+  get checkoutZip(): Locator {
+    return this.page.getByLabel('Código postal (opcional)');
+  }
+
+  /** Form-level error banner shown when `POST /api/v1/orders` fails. */
+  get checkoutSubmitError(): Locator {
+    // #checkout-submit-error shares role="alert" with the toast; the id is the stable handle.
+    // eslint-disable-next-line playwright/no-raw-locators
+    return this.page.locator('#checkout-submit-error');
+  }
+
   get toast(): Locator {
     // Shared with CatalogPage's add-to-cart toast; both messages reuse this same element.
     // eslint-disable-next-line playwright/no-raw-locators
@@ -108,17 +149,54 @@ export class CartPage {
   // ==================== Actions ====================
 
   /**
-   * Opens the offcanvas via the navbar "Carrito" button. Does not assert visibility itself
-   * (assertions live in the spec, per the POM rules) - Playwright's auto-waiting already makes
-   * any subsequent interaction with `dialog`'s content wait for the open transition.
+   * Opens the offcanvas via the navbar "Carrito" button.
+   *
+   * First waits for the page's product data (`GET /api/v1/products`) to settle: post-refactor
+   * the cart lines are rendered from that data at open time and are NOT re-rendered if the fetch
+   * lands later, so opening on a `domcontentloaded`-only page yields an empty offcanvas.
    */
   async open(): Promise<void> {
+    // Wait for the page's product data to have rendered before opening: post-refactor the cart
+    // lines are built from that data at open time and are NOT re-rendered if the fetch lands
+    // later. `#product-list` (index) or `#product-detail` (product page) is the DOM signal.
+    await this.productDataRendered
+      .waitFor({ state: 'attached', timeout: 15_000 })
+      .catch(() => undefined);
     await this.openButton.click();
+  }
+
+  /** First product element that only exists once the page's catalog fetch has rendered. */
+  private get productDataRendered(): Locator {
+    const anyProduct = '#product-list article, #product-detail .product-detail__name';
+    // eslint-disable-next-line playwright/no-nth-methods
+    return this.page.locator(anyProduct).first();
   }
 
   /** Closes the offcanvas via its "Cerrar" button. */
   async close(): Promise<void> {
     await this.closeButton.click();
+  }
+
+  /** Fills the checkout address form. `zipCode` is optional (so is the field). */
+  async fillCheckout(address: {
+    fullName: string;
+    email: string;
+    street: string;
+    city: string;
+    region: string;
+    zipCode?: string;
+  }): Promise<void> {
+    await this.checkoutFullName.fill(address.fullName);
+    await this.checkoutEmail.fill(address.email);
+    await this.checkoutStreet.fill(address.street);
+    await this.checkoutCity.fill(address.city);
+    await this.checkoutRegion.fill(address.region);
+    if (address.zipCode !== undefined) await this.checkoutZip.fill(address.zipCode);
+  }
+
+  /** Submits the checkout form via the "Finalizar compra" button. */
+  async submitCheckout(): Promise<void> {
+    await this.checkoutButton.click();
   }
 
   /**

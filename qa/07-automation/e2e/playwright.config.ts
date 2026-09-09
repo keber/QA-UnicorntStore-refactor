@@ -5,15 +5,13 @@ dotenv.config();
 // -------------------------------------------------------------------
 // Validate required environment variables at config load time
 // -------------------------------------------------------------------
-// Only QA_BASE_URL: this app has no login and no backend/API (confirmed
-// 2026-08-26 via live exploration - see qa/memory/ for the finding). No
-// setup/auth project, no storageState, no QA_USER_* vars needed. If a
-// future refactor adds a login or a backend, this project previously had a
-// setup-project + apiRequest pattern (removed 2026-08-26 once found
-// unnecessary here) - see qa/memory/arquitectura-unicornstore-2026-08-26.md
-// and the "dormant" note in the qa-automation skill's
-// type-safety-and-data-strategy.md reference for what to rebuild.
-const required = ['QA_BASE_URL'];
+// The 2026-09-06 refactor added a real backend (Spring Boot + JWT). The
+// suite targets the isolated QA stack (QA_BASE_URL = unicornt-qa.keber.cl,
+// QA_API_URL = api-unicornt-qa.keber.cl) so throwaway users and test orders
+// stay off prod. Auth tests register a fresh user per run - no QA_USER_*
+// needed. See qa/memory/arquitectura-unicornstore-2026-09-06.md and the
+// (now live) `apiRequest` fixture in fixtures/api/.
+const required = ['QA_BASE_URL', 'QA_API_URL'];
 for (const key of required) {
   if (!process.env[key]) {
     throw new Error(`[qa-framework] Missing required env var: ${key}. Check your .env file.`);
@@ -25,16 +23,21 @@ export default defineConfig({
   testDir: './tests',
   testIgnore: ['**/helpers/debug/**', '**/seeds/**'],
 
-  // ------ Code coverage (fixtures/coverage-fixture.ts stages per-test data
-  // via mcr.add(); these merge it into the final report once - see
-  // mcr.config.ts for what's in/out of scope) ------
-  globalSetup: './global-setup.ts',
-  globalTeardown: './global-teardown.ts',
+  // ------ Code coverage: PARKED since the 2026-09-06 Vite refactor ------
+  // The app ships hashed, minified bundles with no sourcemaps and its build
+  // is not in this repo, so MCR can no longer map coverage to real source.
+  // global-setup/teardown + coverage-fixture + mcr.config are left in the
+  // tree (unwired) for the eventual restore - see qa/AGENT-NEXT-STEPS.md.
 
   // ------ Parallelism ------
-  // No shared session/storageState to worry about - safe to parallelize.
+  // Each test gets a fresh context (guest cart in localStorage) or its own
+  // registered user - safe to parallelize. Local is capped at 2 (matches
+  // qa-framework.config.json integrations.playwright.workers.local): the
+  // per-test MCR().add() in the old coverage fixture caused browserContext
+  // teardown timeouts under the default worker count. Coverage is parked
+  // now (see mcr.config.ts header) but the cap stays as a sane default.
   fullyParallel: true,
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 1 : 2,
 
   // ------ Retry strategy ------
   retries: process.env.CI ? 1 : 0,

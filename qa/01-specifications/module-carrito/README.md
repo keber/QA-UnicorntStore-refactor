@@ -1,5 +1,15 @@
 # MODULE: Carrito (CARR)
 
+> ⚠️ **Post-refactor (Stage 6 "green first", 2026-09-06).** El sitio pasó de stub estático a app
+> Vite + backend Spring Boot/JWT. Para CARR: las operaciones del carrito de invitado
+> (agregar/qty/eliminar/total/vaciar) siguen en `localStorage['unicornt_cart']` y son válidas.
+> **"Finalizar compra" ahora es un formulario real de checkout → `POST /api/v1/orders`, pero está
+> roto de punta a punta (DEF-004)** — el carrito del navegador nunca se sincroniza con el del
+> servidor. Escenarios afectados abajo. Verdad de terreno autoritativa:
+> `qa/memory/arquitectura-unicornstore-2026-09-06.md` +
+> `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md`. La reescritura completa de
+> specs de checkout queda para el sprint de re-baseline (ver `qa/AGENT-NEXT-STEPS.md`).
+
 > Stage 1 (module analysis) completado 2026-08-26 vía exploración en vivo con `playwright-cli`
 > contra `https://unicornt-store.keber.cl`. Complementa el análisis de CAT (ver
 > `qa/01-specifications/module-catalogo/`) — el carrito es el offcanvas de Bootstrap presente en

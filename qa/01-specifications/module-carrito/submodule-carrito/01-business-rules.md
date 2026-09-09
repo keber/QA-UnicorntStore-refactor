@@ -66,16 +66,21 @@
   offcanvas vuelve al estado vacío (RN-CARR-001).
 - **Notes**: —
 
-### RN-CARR-008: "Finalizar compra" es una simulación sin backend
+### RN-CARR-008: "Finalizar compra" confirma una orden real vía la API — `SUPERSEDED` (Stage 6, 2026-09-06)
 
 - **Type**: State Machine
-- **Trigger**: Click en "Finalizar compra"
-- **Behavior**: `unicornt_cart` pasa a `[]`, el offcanvas se cierra, y se muestra el toast
-  `"¡Gracias por tu compra! Tu pedido está en camino. 🦄"` (mismo componente `#cart-toast`
-  reutilizado, estilo éxito). No se genera número de orden, no hay página de confirmación, no hay
-  ninguna llamada de red ni persistencia de la "compra" en ningún lado.
-- **Notes**: No escribir TCs ni automatización que asuman la existencia de una orden real,
-  historial de compras o confirmación por email — ninguno de esos existe.
+- **Estado**: `SUPERSEDED`. La versión pre-refactor de esta regla ("simulación sin backend, toast
+  `¡Gracias por tu compra!…`, sin orden, sin red") **ya no aplica**.
+- **Trigger**: Submit del formulario `#checkout-form` ("Finalizar compra")
+- **Behavior esperado (post-refactor)**: con una sesión autenticada y un carrito no vacío, el
+  submit hace `POST /api/v1/orders` con `{shippingAddress:{street,city,region,zipCode?}}` →
+  `201 {id,status:"CONFIRMED",total}`; el carrito queda vacío, el offcanvas se cierra y se muestra
+  una confirmación de éxito. La orden queda consultable en `GET /api/v1/orders`.
+- **Behavior observado**: roto de punta a punta — ver **DEF-004** (el carrito del navegador nunca
+  se sincroniza con el del servidor; `POST /orders` corre contra carrito vacío → error genérico
+  "No se pudo procesar tu compra"). El toast literal de agradecimiento fue eliminado.
+- **Notes**: La reescritura formal del workflow de checkout (FL-CARR-*) y sus TCs queda para el
+  sprint de re-baseline. En Stage 6 los TCs afectados son guards `test.fail()` de DEF-004.
 
 ### RN-CARR-009: Entrada de carrito con producto inexistente deja la UI inconsistente (DEFECTO)
 

@@ -1,3 +1,6 @@
+// ⚠️ PARKED since the 2026-09-06 Vite refactor - this fixture is NOT merged
+// into fixtures/pom/test-options.ts any more. See ../mcr.config.ts header
+// and qa/AGENT-NEXT-STEPS.md for the restore task.
 import { test as base, type Page } from '@playwright/test';
 import MCR from 'monocart-coverage-reports';
 import coverageOptions from '../mcr.config';

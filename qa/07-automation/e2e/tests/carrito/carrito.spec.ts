@@ -5,24 +5,31 @@
  * @plan qa/02-test-plans/sprints/Sprint-001/Plan-de-Pruebas-QA-UnicorntStore-refactor-Sprint-001-CARR.md
  * @priority P0-P3
  *
- * P0 (Stage 5 first pass) + P1-P3 (Stage 5 second pass, 2026-08-26). DEF-002 status (reconfirmed
- * 2026-08-29 against the refactor): the original inconsistent offcanvas is fixed - a cart with
- * only an entry whose product id no longer exists now renders the empty state and hides the
- * footer, so TC-CARR-CARRITO-035/036 pass again as normal `test()`s. Residual: the "Carrito"
- * badge still counts that phantom entry's qty - TC-CARR-CARRITO-056, `test.fail()`, tracked as
- * keber/unicornt-store-frontend#20. TC-CARR-CARRITO-055 documents the $0-total symptom directly.
+ * Re-baselined for the refactored app (Stage 6 "green first", 2026-09-06 — see
+ * `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md` §4). Guest cart ops
+ * (add / qty / remove / total / clear) still work and are `localStorage['unicornt_cart']`-driven.
  *
- * TC-CARR-CARRITO-027/028/029/030/031/048 are `test.fixme()`-tagged as OBSOLETE after the
- * frontend refactor (backend-integration prep): "Finalizar compra" is now a real checkout flow,
- * not the old cosmetic no-op, and a real checkout step (shipping address) exists. Behavior is
- * still in flux (backend not wired yet), so these are parked, not rewritten. Stage 6
- * (qa-maintenance) will update specs + memory first, then rewrite/replace these once the flow
- * stabilizes. Tracking: qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente (refactor frontend)".
+ * "Finalizar compra" is now a real checkout `<form>` → `POST /api/v1/orders`, but is BROKEN
+ * end-to-end (DEF-004): the browser cart is never synced to the server cart, so the order always
+ * fails. Consequently:
+ * - TC-CARR-CARRITO-027/028/029 → `test.fail()` guards asserting the CORRECT post-checkout state
+ *   (cart cleared / offcanvas closed / success shown), tracked to DEF-004.
+ * - TC-CARR-CARRITO-030/031 → REMOVED, OBSOLETE-SCENARIO (premises inverted by the backend).
+ * - TC-CARR-CARRITO-048 → rewritten as positive coverage of the checkout form rendering.
+ * DEF-002 residual: TC-CARR-CARRITO-056 stays `test.fail()` (badge counts a phantom entry).
  *
- * Cart state is seeded directly via `cartPage.setCart()` + reload rather than through the
- * "Agregar" flow on the catalog pages, to keep these tests independent of DEF-001.
+ * Cart state is seeded directly via `cartPage.setCart()` + reload, independent of DEF-001.
  */
 import { test, expect } from '../../fixtures/pom/test-options';
+
+const VALID_ADDRESS = {
+  fullName: 'QA Automation',
+  email: 'qa-checkout@qa-test.example.com',
+  street: 'Av. Siempre Viva 742',
+  city: 'Santiago',
+  region: 'Region Metropolitana',
+  zipCode: '7500000',
+};
 
 test.describe('carrito de compras (offcanvas)', () => {
   test.beforeEach(async ({ page, clearCart }) => {
@@ -165,57 +172,78 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  // [OBSOLETO - refactor frontend, aún en flujo] "Finalizar compra" ya no vacía el carrito
-  // client-side; el refactor lo convirtió en un flujo real (prep de integración con backend).
-  // Ver el bloque de cabecera del archivo y qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente".
-  test.fixme(
-    '[TC-CARR-CARRITO-027] "Finalizar compra" vacía el carrito',
+  // DEF-004 guards. Correct behavior: with an authenticated session and a non-empty cart,
+  // "Finalizar compra" confirms an order via POST /api/v1/orders, which then clears the cart,
+  // closes the offcanvas, and creates an order retrievable at GET /api/v1/orders.
+  // Actual: the browser cart is never synced to the server cart, so POST /orders fails (400
+  // "cart is empty") — the cart is left intact, the offcanvas stays open, no order is created.
+  // Each test waits for the POST to settle, then asserts the CORRECT end state (which fails
+  // today). Flip `test.fail` -> `test` when DEF-004 is fixed.
+
+  test.fail(
+    '[TC-CARR-CARRITO-027] "Finalizar compra" confirma la orden y vacía el carrito (DEF-004)',
     { tag: '@P0' },
-    async ({ cartPage, page }) => {
+    async ({ cartPage, page, registerViaApi }) => {
+      const user = await registerViaApi();
+      await page.evaluate((t) => localStorage.setItem('unicornt.auth.token', t), user.token);
       await cartPage.setCart([{ id: 1, qty: 1 }]);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
-      await cartPage.checkoutButton.click();
+      await cartPage.fillCheckout({ ...VALID_ADDRESS, email: user.email });
+      const ordersPost = page.waitForResponse((r) => r.url().includes('/api/v1/orders'));
+      await cartPage.submitCheckout();
+      await ordersPost;
       expect(await cartPage.getCart()).toEqual([]);
     }
   );
 
-  // [OBSOLETO - refactor frontend, aún en flujo] El refactor eliminó el toast cosmético
-  // "¡Gracias por tu compra!" (checkout ahora es un flujo real, prep de backend). #cart-toast
-  // conserva el último mensaje ("Producto agregado al carrito"). Ver cabecera + AGENT-NEXT-STEPS.md.
-  test.fixme(
-    '[TC-CARR-CARRITO-029] "Finalizar compra" muestra el toast de agradecimiento',
-    { tag: '@P0' },
-    async ({ cartPage, page }) => {
+  test.fail(
+    '[TC-CARR-CARRITO-028] "Finalizar compra" no muestra error de submit al confirmar (DEF-004)',
+    { tag: '@P1' },
+    async ({ cartPage, page, registerViaApi }) => {
+      const user = await registerViaApi();
+      await page.evaluate((t) => localStorage.setItem('unicornt.auth.token', t), user.token);
       await cartPage.setCart([{ id: 1, qty: 1 }]);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
-      await cartPage.checkoutButton.click();
-      await expect(cartPage.toast).toContainText('¡Gracias por tu compra!');
+      await cartPage.fillCheckout({ ...VALID_ADDRESS, email: user.email });
+      const ordersPost = page.waitForResponse((r) => r.url().includes('/api/v1/orders'));
+      await cartPage.submitCheckout();
+      await ordersPost;
+      // Correct: a valid checkout shows no form-level error. Actual (DEF-004): POST /orders
+      // fails ("cart is empty") and `#checkout-submit-error` is shown.
+      await expect(cartPage.checkoutSubmitError).toBeHidden();
     }
   );
 
-  // [OBSOLETO - refactor frontend, aún en flujo] La premisa "sin backend / 0 llamadas /api/" ya
-  // no aplica: el refactor introdujo la integración con backend. Además el toast de cierre cambió.
-  // Ver cabecera + qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente (refactor frontend)".
-  test.fixme(
-    '[TC-CARR-CARRITO-031] "Finalizar compra" no persiste ni envía la "compra" a ningún lado',
+  test.fail(
+    '[TC-CARR-CARRITO-029] "Finalizar compra" crea una orden real (DEF-004)',
     { tag: '@P0' },
-    async ({ cartPage, page }) => {
-      const apiRequests: string[] = [];
-      page.on('request', (req) => {
-        if (req.url().includes('/api/')) apiRequests.push(req.url());
-      });
+    async ({ cartPage, page, registerViaApi, apiRequest }) => {
+      const user = await registerViaApi();
+      await page.evaluate((t) => localStorage.setItem('unicornt.auth.token', t), user.token);
       await cartPage.setCart([{ id: 1, qty: 1 }]);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
-      await cartPage.checkoutButton.click();
-      await expect(cartPage.toast).toBeVisible();
-      expect(apiRequests).toHaveLength(0);
-      const storageKeys = await page.evaluate(() => Object.keys(localStorage));
-      expect(storageKeys.some((k) => /orden|pedido|compra|order/i.test(k))).toBe(false);
+      await cartPage.fillCheckout({ ...VALID_ADDRESS, email: user.email });
+      const ordersPost = page.waitForResponse((r) => r.url().includes('/api/v1/orders'));
+      await cartPage.submitCheckout();
+      await ordersPost;
+      const orders = await apiRequest<unknown[]>({
+        method: 'GET',
+        url: '/api/v1/orders',
+        token: user.token,
+      });
+      expect(orders.body.length).toBeGreaterThan(0);
     }
   );
+
+  // [TC-CARR-CARRITO-030] REMOVED — OBSOLETE-SCENARIO (Stage 6). The premise ("no order number,
+  // no confirmation") is inverted: POST /api/v1/orders returns {id,status:"CONFIRMED",total} and
+  // GET /api/v1/orders lists it. Correct behavior is covered by TC-027/029 (DEF-004 guards).
+
+  // [TC-CARR-CARRITO-031] REMOVED — OBSOLETE-SCENARIO (Stage 6). "0 /api calls, nothing persists"
+  // no longer describes correct behavior — checkout issues POST /api/v1/orders.
 
   // ==================== P1-P3 (Stage 5, second pass) ====================
 
@@ -422,35 +450,8 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  // [OBSOLETO - refactor frontend, aún en flujo] Tras el refactor "Finalizar compra" ya no cierra
-  // el offcanvas (ahora abre/mantiene el flujo de checkout real). Ver cabecera + AGENT-NEXT-STEPS.md.
-  test.fixme(
-    '[TC-CARR-CARRITO-028] "Finalizar compra" cierra el offcanvas',
-    { tag: '@P1' },
-    async ({ cartPage, page }) => {
-      await cartPage.setCart([{ id: 1, qty: 1 }]);
-      await page.reload({ waitUntil: 'domcontentloaded' });
-      await cartPage.open();
-      await cartPage.checkoutButton.click();
-      await expect(cartPage.dialog).toBeHidden();
-    }
-  );
-
-  // [OBSOLETO - refactor frontend, aún en flujo] Depende del toast "¡Gracias por tu compra!" que
-  // el refactor eliminó; el checkout real (con backend) puede además generar confirmación/orden.
-  // Ver cabecera + qa/AGENT-NEXT-STEPS.md -> "Mantenimiento pendiente (refactor frontend)".
-  test.fixme(
-    '[TC-CARR-CARRITO-030] "Finalizar compra" no genera número de orden ni confirmación',
-    { tag: '@P1' },
-    async ({ cartPage, page }) => {
-      await cartPage.setCart([{ id: 1, qty: 1 }]);
-      await page.reload({ waitUntil: 'domcontentloaded' });
-      await cartPage.open();
-      await cartPage.checkoutButton.click();
-      await expect(cartPage.toast).toContainText('¡Gracias por tu compra!');
-      await expect(page.getByText(/n[uú]mero de orden|order id|pedido n[uú]mero/i)).toHaveCount(0);
-    }
-  );
+  // [TC-CARR-CARRITO-028] moved up to the DEF-004 guard block (was a separate test.fixme here).
+  // [TC-CARR-CARRITO-030] REMOVED — OBSOLETE-SCENARIO (see the DEF-004 guard block).
 
   test(
     '[TC-CARR-CARRITO-032] El carrito con múltiples ítems distintos renderiza todas las líneas',
@@ -660,38 +661,49 @@ test.describe('carrito de compras (offcanvas)', () => {
     }
   );
 
-  // [OBSOLETO - refactor frontend, aún en flujo] El refactor agregó un paso de checkout real
-  // (campo de dirección/envío visible). Este TC aseguraba su ausencia y ya no aplica; en Stage 6
-  // se reemplaza por cobertura positiva del flujo. Ver cabecera + AGENT-NEXT-STEPS.md.
-  test.fixme(
-    '[TC-CARR-CARRITO-048] No existe ningún paso de checkout real',
+  // Rewritten (was "no checkout step exists" — OBSOLETE). The refactor added a real checkout
+  // form; this asserts it renders with its fields. The submit-success path is DEF-004 (guards
+  // TC-027/028/029). No payment/coupon fields exist yet.
+  test(
+    '[TC-CARR-CARRITO-048] El formulario de checkout renderiza con sus campos de dirección',
     { tag: '@P1' },
     async ({ cartPage, page }) => {
       await cartPage.setCart([{ id: 1, qty: 1 }]);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
-      await expect(page.getByRole('textbox', { name: /direcci[oó]n|env[ií]o/i })).toHaveCount(0);
+      await expect(cartPage.checkoutForm).toBeVisible();
+      await expect(cartPage.checkoutFullName).toBeVisible();
+      await expect(cartPage.checkoutEmail).toBeVisible();
+      await expect(cartPage.checkoutStreet).toBeVisible();
+      await expect(cartPage.checkoutCity).toBeVisible();
+      await expect(cartPage.checkoutRegion).toBeVisible();
+      await expect(cartPage.checkoutButton).toBeVisible();
       await expect(page.getByText(/tarjeta|medio de pago|cup[oó]n/i)).toHaveCount(0);
     }
   );
 
   test(
-    '[TC-CARR-CARRITO-049] No hay llamadas de red al abrir/operar el carrito',
+    '[TC-CARR-CARRITO-049] Operar el carrito de invitado no dispara llamadas a la API',
     { tag: '@P1' },
     async ({ cartPage, page }) => {
-      const apiRequests: string[] = [];
-      page.on('request', (req) => {
-        if (req.url().includes('/api/')) apiRequests.push(req.url());
-      });
       await cartPage.setCart([
         { id: 1, qty: 1 },
         { id: 2, qty: 1 },
       ]);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await cartPage.open();
+      // Start capturing only AFTER the page's own load-time calls (GET /products, /categories)
+      // have settled — this asserts the cart *operations* make no API calls, not page load.
+      await expect(cartPage.itemRow(1)).toBeVisible();
+      const apiRequests: string[] = [];
+      page.on('request', (req) => {
+        if (req.url().includes('/api/')) apiRequests.push(req.url());
+      });
       await cartPage.increaseButton(1).click();
+      await expect(cartPage.qtyInput(1)).toHaveValue('2');
       await cartPage.removeButton(2).click();
-      expect(apiRequests).toHaveLength(0);
+      await expect(cartPage.itemRow(2)).toHaveCount(0);
+      expect(apiRequests).toEqual([]);
     }
   );
 
@@ -778,6 +790,9 @@ test.describe('carrito de compras (offcanvas)', () => {
     async ({ cartPage, page }) => {
       await cartPage.setCart([{ id: 9999, qty: 1 }]);
       await page.reload({ waitUntil: 'domcontentloaded' });
+      // Let the catalog (and with it the badge script) finish rendering.
+      // eslint-disable-next-line playwright/no-raw-locators, playwright/no-nth-methods
+      await expect(page.locator('#product-list article').first()).toBeVisible();
       // Expected (RN-CARR-009): con solo entradas inválidas el badge está oculto, consistente
       // con el offcanvas (estado vacío) y el total ($0).
       // Actual (DEF-002 residual, reconfirmado 2026-08-29 contra el refactor): #cart-badge

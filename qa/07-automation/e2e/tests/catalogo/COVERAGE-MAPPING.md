@@ -4,18 +4,26 @@
 
 ## Summary
 
-| Submódulo | Total | Automated (@P0) | Automated (@P1-P3) | Bloqueado (PENDING-CODE) |
-|---|---|---|---|---|
-| LISTADO | 50 | 10 | 39 | 1 |
-| DETALLE | 55 | 8 | 44 | 3 |
-| **Total** | **105** | **18** | **83** | **4** |
+| Submódulo | Total | Automated | OBSOLETE (removed) | `test.fail()` guards | Bloqueado |
+|---|---|---|---|---|---|
+| LISTADO | 50 | 48 | 2 (TC-039, TC-040) | 1 (TC-027 → DEF-001) | 1 |
+| DETALLE | 55 | 51 | 1 (TC-037) | 3 (TC-022 → DEF-001, TC-047 → DEF-003, TC-033 → DEF-007) | 3 |
+| **Total** | **105** | **99** | **3** | **4** | **4** |
 
-All 101 automated TCs (18 P0 + 83 P1-P3; 3 of them `test.fail()`-tagged — 2 for DEF-001
-(keber/unicornt-store-frontend#19), 1 for DEF-003 (#21), reconfirmed 2026-08-29 against the
-refactor) pass `tsc --noEmit` and a live run against `{QA_BASE_URL}` (2 consecutive green runs, 0 flake).
-The 4 `Bloqueado` TCs (features absent from the current app - see the Plan de Pruebas Sección 8)
-are confirmed out of scope by business decision (2026-08-26) - revisit only if these features
-are ever implemented.
+**Stage 6 "green first" (2026-09-06)** — re-baselined against the QA stack
+(`unicornt-qa.keber.cl` + `api-unicornt-qa.keber.cl`). The catalog now loads from
+`GET /api/v1/products` and the default view renders **20 of 49** products (API page 0, no
+pagination UI); a `#category-filter` <select> re-queries by slug. Changes:
+- **Removed** (`OBSOLETE-SCENARIO`): TC-CAT-LISTADO-039 (no contact `<form>`),
+  TC-CAT-LISTADO-040 / TC-CAT-DETALLE-037 (no `/api` calls).
+- **Inverted**: TC-CAT-LISTADO-014 (a category filter now exists). TC-CAT-LISTADO-012/016
+  reworked around the filter.
+- **New `test.fail()` guard**: TC-CAT-DETALLE-033 → **DEF-007** (`product.html` only resolves
+  ids 1–20). Existing guards TC-CAT-LISTADO-027 / TC-CAT-DETALLE-022 (DEF-001) and
+  TC-CAT-DETALLE-047 (DEF-003) unchanged, re-verified on QA.
+`tsc --noEmit` + `eslint` clean; live run 98/98 (catalogo dir).
+The 4 `Bloqueado` TCs (features absent from the app) stay out of scope by business decision
+(2026-08-26).
 
 > Note: the first-pass version of this table double-counted `DETALLE`'s `Bloqueado` row (listed
 > 4, actually 3: TC-CAT-DETALLE-050/051/052 - TC-CAT-DETALLE-053 is `Automatizado`, not
@@ -36,11 +44,11 @@ are ever implemented.
 | TC-CAT-LISTADO-009 | El precio se muestra en formato CLP `"$XX.990"` | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P1) |
 | TC-CAT-LISTADO-010 | Cada tarjeta incluye "Ver más" y "Agregar" | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P0) |
 | TC-CAT-LISTADO-011 | El primer producto de la grilla es id=1 | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P2) |
-| TC-CAT-LISTADO-012 | El último producto (49°) de la grilla es id=49 | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P2) |
+| TC-CAT-LISTADO-012 | Filtrar por categoría "QA" muestra sus 2 productos (ids 48 y 49) | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P2) — reworked around the category filter |
 | TC-CAT-LISTADO-013 | No se observa ningún producto de categoría "Tazón" | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | — | 🔲 Bloqueado (PENDING-CODE) |
-| TC-CAT-LISTADO-014 | No existen controles de búsqueda, filtro ni paginación | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P2) |
+| TC-CAT-LISTADO-014 | Existe un filtro por categoría (re-consulta la API); no hay buscador ni paginación | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P2) — inverted (filter now exists) |
 | TC-CAT-LISTADO-015 | "Ver más" del primer producto navega a `product.html?id=1` | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P0) |
-| TC-CAT-LISTADO-016 | "Ver más" del último producto navega a `product.html?id=49` | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P1) |
+| TC-CAT-LISTADO-016 | "Ver más" del producto id=49 (vía filtro QA) enlaza a `product.html?id=49` | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P1) — href only; detalle roto por DEF-007 (TC-CAT-DETALLE-033) |
 | TC-CAT-LISTADO-017 | El enlace "Ver más" tiene un ícono decorativo y texto accesible | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P3) |
 | TC-CAT-LISTADO-018 | Volver desde el detalle regresa al listado con estado intacto | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P2) |
 | TC-CAT-LISTADO-019 | "Agregar" crea una entrada nueva en `unicornt_cart` | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P0) |
@@ -63,8 +71,8 @@ are ever implemented.
 | TC-CAT-LISTADO-036 | El footer muestra dirección, email y teléfono como texto estático | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P3) |
 | TC-CAT-LISTADO-037 | Los íconos de redes sociales son placeholders | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P3) |
 | TC-CAT-LISTADO-038 | El footer muestra el aviso de copyright | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P3) |
-| TC-CAT-LISTADO-039 | No existe ningún formulario de contacto real | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P2) |
-| TC-CAT-LISTADO-040 | No se observan llamadas de red a `/api` | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P0) |
+| TC-CAT-LISTADO-039 | No existe ningún formulario de contacto real | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | — | 🗑️ OBSOLETE-SCENARIO (Stage 6) — removed |
+| TC-CAT-LISTADO-040 | No se observan llamadas de red a `/api` | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | — | 🗑️ OBSOLETE-SCENARIO (Stage 6) — el listado ahora depende de la API; removed |
 | TC-CAT-LISTADO-041 | No existe ningún control de login/registro en el header | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P0) |
 | TC-CAT-LISTADO-042 | El botón "Agregar" es accesible por teclado | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P2) |
 | TC-CAT-LISTADO-043 | El heading "Nuestros productos" mantiene jerarquía correcta | qa/01-specifications/module-catalogo/submodule-listado/05-test-scenarios.md | tests/catalogo/listado.spec.ts | ✅ Automated (@P3) |
@@ -112,11 +120,11 @@ are ever implemented.
 | TC-CAT-DETALLE-030 | `id="01"` (cero a la izquierda) resuelve al producto 1 | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P2) |
 | TC-CAT-DETALLE-031 | `id="1.5"` (decimal) resuelve al producto 1 | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P2) |
 | TC-CAT-DETALLE-032 | `id=1` (primer producto válido) renderiza correctamente | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
-| TC-CAT-DETALLE-033 | `id=49` (último producto válido) renderiza correctamente | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
+| TC-CAT-DETALLE-033 | [DEFECTO] `id=49` (último producto válido) renderiza correctamente | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ⚠️ Automatizado (`test.fail()` - DEF-007) @P1 |
 | TC-CAT-DETALLE-034 | El header en detalle mantiene los mismos enlaces que en listado | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P2) |
 | TC-CAT-DETALLE-035 | "Contacto" en detalle navega a `index.html#contacto` | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P2) |
 | TC-CAT-DETALLE-036 | El footer en detalle es idéntico al del listado | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P3) |
-| TC-CAT-DETALLE-037 | No se observan llamadas de red a `/api` al cargar el detalle | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P0) |
+| TC-CAT-DETALLE-037 | No se observan llamadas de red a `/api` al cargar el detalle | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | — | 🗑️ OBSOLETE-SCENARIO (Stage 6) — el detalle ahora depende de la API; removed |
 | TC-CAT-DETALLE-038 | El toast de confirmación también aparece al agregar desde el detalle, con el nombre del producto interpolado | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
 | TC-CAT-DETALLE-039 | El badge del botón "Carrito" se actualiza al agregar desde el detalle | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |
 | TC-CAT-DETALLE-040 | El carrito persiste tras recargar la página de detalle | qa/01-specifications/module-catalogo/submodule-detalle/05-test-scenarios.md | tests/catalogo/detalle.spec.ts | ✅ Automated (@P1) |

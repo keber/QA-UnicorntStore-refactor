@@ -1,33 +1,40 @@
 # QA — QA-UnicorntStore-refactor
 
 > Framework: `@keber/qa-framework` v1.11.3
-> Language: es | Base URL: `https://unicornt-store.keber.cl`
+> Language: es
+> **Target: el stack QA** — `QA_BASE_URL=https://unicornt-qa.keber.cl`,
+> `QA_API_URL=https://api-unicornt-qa.keber.cl` (Postgres aislado, Swagger abierto). La suite
+> registra usuarios desechables y crea órdenes acá, no en prod.
 > CI: GitHub Actions (`.github/workflows/qa-e2e.yml`) — no usa Azure DevOps.
-> App front-end, sin login. **El refactor 2026-08-29 empezó a introducir integración con
-> backend (WIP)** — la constante "sin backend/API" ya no es firme; ver
-> `qa/AGENT-NEXT-STEPS.md → Mantenimiento pendiente` y `qa/memory/arquitectura-unicornstore-2026-08-26.md`.
+> **El refactor 2026-09-06 completó la migración**: frontend Vite multipágina + backend real
+> (Spring Boot + JWT), catálogo por API, filtro por categoría, checkout real. Ver
+> `qa/memory/arquitectura-unicornstore-2026-09-06.md` (vigente) y
+> `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md`.
 > Reporte E2E en vivo (publicado por CI en cada push a `main`): https://keber.dev/QA-UnicorntStore-refactor/
-> Reporte de code coverage en vivo (JS/CSS propio de la app, ver `../README.md → Code Coverage`): https://keber.dev/QA-UnicorntStore-refactor/coverage/
+> **Reporte de code coverage: EN PAUSA** desde el paso a Vite (bundles minificados sin sourcemap,
+> build del frontend fuera de este repo) — ver `qa/AGENT-NEXT-STEPS.md`.
 > Ver [README.md](../README.md) (raíz, en inglés) para la vista general del proyecto.
 
 ---
 
 ## Module Status
 
-| Module | Submodule | TCs Total | TCs Automated | Plan | Status | Last Run |
+| Module | Submodule | TCs Total | Automatizados | Plan | Status | Last Run |
 |---|---|---|---|---|---|---|
-| CAT (Catálogo) | LISTADO | 50 | 49 (10 @P0 + 39 @P1-P3, 1 Bloqueado) | ✅ | ✅ Stage 5 done · ⚠️ 1 test.fixme OBSOLETE (refactor) | 2026-09-03 (green, ver Last Run) |
-| CAT (Catálogo) | DETALLE | 55 | 52 (8 @P0 + 44 @P1-P3, 3 Bloqueado) | ✅ | ✅ Stage 5 done | 2026-09-03 (green, ver Last Run) |
-| CARR (Carrito) | CARRITO | 55 | 55 (14 @P0 + 41 @P1-P3) | ✅ | ✅ Stage 5 done · ⚠️ 6 test.fixme OBSOLETE (refactor) | 2026-09-03 (green, ver Last Run) |
+| CAT (Catálogo) | LISTADO | 50 | 48 (2 OBSOLETE removed) | ✅ (v1.1) | ✅ Stage 6 re-baselined · 1 `test.fail` (DEF-001) | 2026-09-06 (green) |
+| CAT (Catálogo) | DETALLE | 55 | 51 (1 OBSOLETE removed, 3 Bloqueado) | ✅ (v1.1) | ✅ Stage 6 re-baselined · 3 `test.fail` (DEF-001/003/007) | 2026-09-06 (green) |
+| CARR (Carrito) | CARRITO | 56 | 54 (2 OBSOLETE removed) | ✅ (v1.1) | ✅ Stage 6 re-baselined · 4 `test.fail` (3×DEF-004, DEF-002) | 2026-09-06 (green) |
 
 **Legend**: ✅ Done · ⚠️ Partial · 🔲 Not started · ⛔ Blocked
 
-> **Mantenimiento por el refactor (2026-08-29+)**: el refactor del frontend dejó **7 tests
-> obsoletos** en `test.fixme()` (comportamiento de checkout / contacto / "sin API" que cambió; el
-> backend aún no está conectado). Cuando el nuevo comportamiento estabilice se ejecuta **Stage 6
-> (`qa-maintenance`)** — checklist completo en `qa/AGENT-NEXT-STEPS.md`. Incluye reparar el
-> reporte de code coverage, que sale en 0 desde el cambio a Vite (bundles con hash ≠ regex actual
-> de `mcr.config.ts`).
+> **Stage 6 "green first" (2026-09-06)** — suite re-baselined against the fully-migrated app on
+> the QA stack. Catalog is API-loaded (20-of-49 default view + category filter); checkout is a
+> real `POST /api/v1/orders` flow. 6 scenarios removed as `OBSOLETE-SCENARIO` (no-`/api`,
+> no-contact-`<form>`, cosmetic-checkout premises); 4 new `test.fail()` guards for defects the
+> re-baseline surfaced/reconfirmed (**DEF-004** checkout broken, **DEF-007** detail 20-cap, plus
+> DEF-001/002/003). A dedicated **AUTH** module, the server-side Cart API, category/pagination
+> coverage, an API contract-test suite, and the coverage-report restore are the **Sprint 2**
+> backlog — see `qa/AGENT-NEXT-STEPS.md`.
 
 ---
 
@@ -51,61 +58,51 @@ npx playwright show-report
 npx playwright test --last-failed
 ```
 
-> Copy `qa/07-automation/e2e/.env.example` to `.env` and set `QA_BASE_URL` — no credentials
-> needed, this app has no login (see `qa/memory/arquitectura-unicornstore-2026-08-26.md`).
+> Copy `qa/07-automation/e2e/.env.example` to `.env`: `QA_BASE_URL=https://unicornt-qa.keber.cl`
+> + `QA_API_URL=https://api-unicornt-qa.keber.cl`. Checkout/auth tests register a fresh user per
+> run — no fixed credentials. See `qa/memory/arquitectura-unicornstore-2026-09-06.md`.
 
 ---
 
 ## Active Blockers
 
-| ID | Description | Affects | Opened | Issue | Status |
+| ID | Sev | Description | Affects | `test.fail()` guard | Issue |
 |---|---|---|---|---|---|
-| DEF-001 | Límite máximo de cantidad (99) no se respeta al agregar sobre un ítem ya en 99 (escenario A — editar manual >99 — corregido en el refactor) | CAT/LISTADO, CAT/DETALLE | 2026-08-26 | [#19](https://github.com/keber/unicornt-store-frontend/issues/19) | Open parcial (Low/P2) — reconfirmado vs refactor 2026-08-29 |
-| DEF-002 | Residual: el badge del carrito cuenta la `qty` de una entrada fantasma (el offcanvas inconsistente original se corrigió en el refactor) | CARR/CARRITO | 2026-08-26 | [#20](https://github.com/keber/unicornt-store-frontend/issues/20) | Open residual (Low/P3) — reconfirmado vs refactor 2026-08-29 |
-| DEF-003 | `product.html` desborda horizontalmente (~12px) en viewport móvil de 375px (`.row.g-5` de `#product-content`) | CAT/DETALLE | 2026-08-26 | [#21](https://github.com/keber/unicornt-store-frontend/issues/21) | Open (Low/P3) — reproduce sin cambios vs refactor 2026-08-29 |
+| DEF-004 | **High** | Checkout nunca se completa por la UI — el carrito del navegador nunca se sincroniza con el del servidor, así que `POST /api/v1/orders` corre contra un carrito vacío | CARR/CARRITO | TC-CARR-CARRITO-027/028/029 | pendiente |
+| DEF-007 | **High** | `product.html` busca el `id` en la primera página de `GET /products` (20) en vez de `GET /products/{id}` → los productos 21–49 redirigen a `index.html` | CAT/DETALLE | TC-CAT-DETALLE-033 | pendiente |
+| DEF-001 | Low/P2 | Límite máx. de cantidad (99) no se respeta al agregar sobre un ítem ya en 99 (escenario A corregido en el refactor) | CAT/LISTADO, CAT/DETALLE | TC-CAT-LISTADO-027, TC-CAT-DETALLE-022 | [#19](https://github.com/keber/unicornt-store-frontend/issues/19) |
+| DEF-002 | Low/P3 | Residual: el badge del carrito cuenta la `qty` de una entrada fantasma | CARR/CARRITO | TC-CARR-CARRITO-056 | [#20](https://github.com/keber/unicornt-store-frontend/issues/20) |
+| DEF-003 | Low/P3 | `product.html` desborda ~12px a 375px (`.row.g-5` de `#product-content`) | CAT/DETALLE | TC-CAT-DETALLE-047 | [#21](https://github.com/keber/unicornt-store-frontend/issues/21) |
+| DEF-005 | Low/P3 | Botones de auth en inglés ("Sign in" / "Create account") en UI español | AUTH | — | pendiente |
+| DEF-006 | Low/P3 | Clase CSS residual `badge-tazon` en todo badge de categoría | CAT | — | pendiente |
 
-> Issues abiertos en el repo de la **app** (`keber/unicornt-store-frontend`), no en este repo de QA.
-> Los TCs que los demuestran están en `test.fail()` (Playwright los marca cuando se corrijan):
-> TC-CAT-LISTADO-027, TC-CAT-DETALLE-022 (DEF-001); TC-CARR-CARRITO-056 (DEF-002);
-> TC-CAT-DETALLE-047 (DEF-003).
+> Reportes formales en `qa/06-defects/open/`. Issues (los que tienen link) en el repo de la
+> **app** (`keber/unicornt-store-frontend`), no en este repo de QA. DEF-004/005/006/007 filed
+> 2026-09-06 (Stage 6 re-baseline); issues del lado de la app **pendientes de abrir** (el
+> clasificador de auto-mode bloquea `gh` outward-facing acá).
 
 ---
 
 ## Last Run
 
-| Suite | Date | Pass | Fail | Skip | CI Link |
-|---|---|---|---|---|---|
-| E2E (@P0-@P3, full suite) | 2026-09-03 | 150 (incl. 4 `test.fail()` esperados) | 0 | 7 (`test.fixme()` OBSOLETE — refactor) | Local run (`suite-maintenance`). 13 fallos transitorios de teardown solo con paralelismo local alto — verde en serie (`--workers=1`, como CI). Ver Flaky Tests. |
-| E2E (@P0-@P3, full suite) | 2026-08-26 | 150 | 0 | 6 (`test.fixme()` - DEF-001/002/003) | [run 1](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001), [run 2](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33013887052) — both green, 0 flake |
+| Suite | Date | Pass | Fail | Notes |
+|---|---|---|---|---|
+| E2E full suite vs QA stack (`CI=true --workers=1`, config de CI) | 2026-09-06 | **152** | 0 | Stage 6 re-baseline, corrida autoritativa (15.6m). "Pass" incluye los 8 `test.fail()` guards (DEF-001/002/003/004/007) que reportan como expected-failure. 0 `test.fixme`. También verde por-directorio con `--workers=2` (catalogo 98/98 · carrito 54/54). |
+| E2E (@P0-@P3, full suite) | 2026-09-03 | 150 | 0 | Pre-refactor baseline (rama `suite-maintenance`, contra prod). |
+| E2E (@P0-@P3, full suite) | 2026-08-26 | 150 | 0 | [run 1](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001), [run 2](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33013887052). |
 
 > Update this table after each significant run. The CI Link is a GitHub Actions run URL
 > (`.github/workflows/qa-e2e.yml`) or a path to a local report file.
 
-## Last Execution
-
-| Date | Suite | Pass | Skip | Fail | Duration | Report |
-|---|---|---|---|---|---|---|
-| 2026-09-03 | `tests/catalogo/detalle.spec.ts` (`--workers=1`, re-run tras flake) | 52 | 0 | 0 | ~1.4m | `qa/07-automation/e2e/playwright-report/` (local, gitignored) |
-| 2026-09-03 | full suite (`--workers=6`, default local) | 137 | 7 | 13 transitorios (teardown timeout, no reproducen en serie) | ~6.5m | idem |
-| 2026-08-26 | `tests/catalogo tests/carrito` (@P0) | 32 | 0 | 0 | ~24s | `qa/07-automation/e2e/playwright-report/` (local, gitignored) |
-| 2026-08-26 | `tests/catalogo tests/carrito` (@P0-@P3, full suite) | 150 | 6 | 0 | ~90s (×2 consecutive runs, 0 flake) | `qa/07-automation/e2e/playwright-report/` (local, gitignored) |
-
 ## Flaky Tests
 
-> Mark known flaky tests with this inline annotation directly in the table or spec file.
 > Format: `[flaky] <test-id-or-name> - <root cause> - last seen <YYYY-MM-DD>`
->
-> Example:
-> `[flaky] TC-MOD-012 - timing issue on slow CI agents - last seen 2026-01-15`
->
-> Remove the annotation once the test has been stable for 2+ consecutive CI runs.
+> Remove once stable for 2+ consecutive CI runs.
 
-`[flaky] tests/catalogo/detalle.spec.ts (bloque completo) - "Tearing down context exceeded the
-test timeout of 30000ms" / "browserContext.close: Test ended" bajo paralelismo local alto
-(default = 6 workers). Causa: contención de disco en el MCR().add() por-test de
-fixtures/coverage-fixture.ts cuando varios workers escriben el cache a la vez. No reproduce con
---workers=1 (config de CI) - last seen 2026-09-03. Mitigación: correr local con --workers=2, o
-cap en playwright.config.ts. CI no afectado.`
+_Ninguno abierto._ El flake de teardown por `coverage-fixture` (visto 2026-09-03) quedó resuelto:
+coverage está en pausa (fixture desconectada) y `playwright.config.ts` fija `workers` local en 2.
+La cadencia de carga async del catálogo se maneja con `CatalogPage.awaitLoaded()` /
+`CartPage.open()` (esperan el render de datos de producto antes de interactuar).
 
 ---
 
@@ -140,7 +137,22 @@ Checklist (completed):
 - [x] Confirmed `qa-e2e.yml` (CI) passes green on a real push to `main` — repo created at `keber/QA-UnicorntStore-refactor`, [run succeeded](https://github.com/keber/QA-UnicorntStore-refactor/actions/runs/33004443001) (150 passed, 6 skipped, lint + tsc clean).
 - [x] Business decision on the 4 `Bloqueado` TCs (Tazón category; detail variants/reviews/related products): **confirmed out of scope** — documented as permanently blocked pending feature implementation, not automated further.
 
-_No other sprints completed yet._
+### Stage 6 "green first" — Re-baseline vs the migrated app (2026-09-06)
+
+**Trigger**: the app completed its migration to a Vite frontend + a real Spring Boot/JWT backend.
+**Outcome**: CAT + CARR suite re-baselined green against the isolated QA stack
+(`unicornt-qa.keber.cl` + `api-unicornt-qa.keber.cl`); target switched from prod.
+
+- [x] Live exploration of the QA stack + backend contract (`unicornt-store-backend/docs/openapi.json`);
+  new arch memory `arquitectura-unicornstore-2026-09-06.md`, findings doc under `qa/05-test-execution/`.
+- [x] Specs aligned to ground truth (v1.1) — `OBSOLETE-SCENARIO` marks, not a full rewrite.
+- [x] API layer reinstated (`fixtures/api/` — `apiRequest` + `registerViaApi` + Zod schemas); `zod` dep; `workers` local = 2; root `.gitattributes`.
+- [x] 3 page objects + 3 spec files rewritten for async catalog (20-of-49 + category filter) and real checkout.
+- [x] Defects filed: DEF-004 (checkout broken, High), DEF-007 (detail 20-cap, High), DEF-005, DEF-006. 4 new `test.fail()` guards.
+- [x] Coverage report parked; CI coverage job + badge removed. Dashboards + both COVERAGE-MAPPING synced.
+- Result vs QA (`--workers=2`): catalogo 98/98, carrito 54/54, 0 real failures.
+- **Not done (Sprint 2 backlog)**: AUTH module, server Cart API coverage, category/pagination
+  coverage, API contract-test suite, coverage-report restore, frontend-repo issues for DEF-004..007.
 
 ---
 
@@ -154,7 +166,8 @@ _No other sprints completed yet._
 | Agent Next Steps | `qa/AGENT-NEXT-STEPS.md` |
 | Automation Config | `qa/07-automation/e2e/playwright.config.ts` |
 | CI Workflow | `.github/workflows/qa-e2e.yml` |
-| Architecture Findings | `qa/memory/arquitectura-unicornstore-2026-08-26.md` |
+| Architecture Findings (vigente) | `qa/memory/arquitectura-unicornstore-2026-09-06.md` |
+| Stage 6 Re-baseline Findings | `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md` |
 | Sprint 001 Test Plans | `qa/02-test-plans/sprints/Sprint-001/` |
 | Coverage Mapping (CAT) | `qa/07-automation/e2e/tests/catalogo/COVERAGE-MAPPING.md` |
 | Coverage Mapping (CARR) | `qa/07-automation/e2e/tests/carrito/COVERAGE-MAPPING.md` |

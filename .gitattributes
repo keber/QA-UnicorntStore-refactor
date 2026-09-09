@@ -1,0 +1,25 @@
+# Normalize line endings to LF in the repo and in every working copy.
+# The e2e project's Prettier/ESLint config enforces LF; without this,
+# core.autocrlf=true on Windows checkouts rewrites .ts/.md files to CRLF
+# and `npm run lint` fails locally (CI on Linux is unaffected).
+* text=auto eol=lf
+
+# Explicit for the file types we lint / format.
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.mts  text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Binary assets — never touch.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.pdf  binary
+*.zip  binary

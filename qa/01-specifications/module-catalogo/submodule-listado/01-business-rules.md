@@ -1,14 +1,23 @@
 # Business Rules — Catálogo: Listado de productos
 
-### RN-CAT-001: Renderizado completo del catálogo sin paginación ni filtros
+> **version**: 1.1 · **last-updated**: 2026-09-06 · **change-summary**: Stage 6 — RN-CAT-001 y
+> RN-CAT-005 reescritas para el catálogo por API + filtro por categoría + tope de 20. Detalle:
+> `qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md`.
+
+### RN-CAT-001: El catálogo se carga desde la API y muestra la primera página (20 de 49) con filtro por categoría
 
 - **Type**: State Machine
+- **Estado**: reescrita en Stage 6 (2026-09-06). Versión pre-refactor: "49 tarjetas hardcodeadas
+  en `assets/js/products.js`, 0 llamadas de red, sin filtros".
 - **Trigger**: Carga de `index.html`
-- **Behavior**: El sistema renderiza las 49 tarjetas de producto en una sola pasada, sin
-  paginación, scroll infinito, ni controles de búsqueda/filtro. El origen de los datos es un
-  arreglo hardcodeado en `assets/js/products.js`, no una llamada a API.
-- **Notes**: Confirmado por observación directa (snapshot completo) y por `requests` de
-  `playwright-cli` (0 llamadas de red no estáticas).
+- **Behavior**: Al cargar, el frontend hace `GET /api/v1/products` y `GET /api/v1/categories` y
+  renderiza en `#product-list` (`role="list"`, `aria-busy` mientras carga, atributo removido al
+  terminar). El API pagina (`size` 20 por defecto, `totalElements` 49, `totalPages` 3) y el
+  storefront muestra **sólo la página 0 → 20 tarjetas**; no hay UI de paginación ni scroll
+  infinito. Un `select#category-filter` (`aria-label="Filtrar por categoría"`, `value` = slug de
+  categoría) dispara `GET /api/v1/products?category=<slug>` y re-renderiza el subconjunto.
+- **Notes**: La cobertura formal de paginación/filtro (todas las categorías, límites, "sin
+  resultados") queda para el sprint de re-baseline.
 
 ### RN-CAT-002: Alta de producto nuevo al carrito desde el listado
 
@@ -45,13 +54,15 @@
 ### RN-CAT-005: Categoría de producto
 
 - **Type**: State Machine
+- **Estado**: reescrita en Stage 6 (2026-09-06). Versión pre-refactor: "el badge siempre muestra
+  `Polera`; no hay `Tazón`".
 - **Trigger**: Renderizado de cada tarjeta
-- **Behavior**: El badge de categoría de las 49 tarjetas observadas muestra siempre el valor
-  `"Polera"`. No se observó ningún producto de categoría `"Tazón"`, pese a que el footer de la
-  tienda menciona "Poleras y tazones con los memes más épicos".
-- **Notes**: Marcar como `PENDING-CODE` cualquier TC que dependa de la categoría "Tazón" — el
-  dato no existe en el catálogo actual. Confirmar con negocio si es un catálogo incompleto o si
-  el copy del footer está desactualizado.
+- **Behavior**: El badge (`.product-card__category`) muestra el `categoryName` del producto
+  devuelto por la API. Hay **10 categorías** (slugs: `pm`, `cloud`, `devops`, `enigma`, `general`,
+  `it-crowd`, `linux`, `personajes`, `programador`, `qa`). Los 49 productos son todos de
+  `productTypeName` `"T-shirt"` (los tipos `Mug`/`Poster` están sembrados pero sin productos).
+- **Notes**: El badge lleva una clase CSS residual `badge-tazon` en toda categoría — ver
+  **DEF-006** (cosmético). Cobertura formal por categoría → sprint de re-baseline.
 
 ### RN-CAT-006: Formato de precio
 

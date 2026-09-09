@@ -1,11 +1,19 @@
 # Test Data — Carrito de compras (offcanvas)
 
+> **Stage 6 (2026-09-06)**: el catálogo ahora viene de `GET /api/v1/products` (seed determinista,
+> ids 1–49, precios sin cambios — ver `arquitectura-unicornstore-2026-09-06.md`). Para los TCs de
+> **checkout** (`test.fail()` de DEF-004) la precondición añade **una sesión autenticada creada
+> por corrida**: `uniqueEmail()` + `POST /api/v1/auth/register` (auto-login) → token en
+> `localStorage['unicornt.auth.token']`. Cuentas desechables; las órdenes se acumulan en la DB
+> QA aislada (aceptado por el dueño).
+
 ## Prerequisites
 
 | Item | Description | Source |
 |------|-------------|--------|
-| Catálogo de 49 productos | Mismo catálogo estático usado por CAT | Estático (app) |
+| Catálogo de 49 productos | `GET /api/v1/products` contra el stack QA (seed `V2__seed_reference_data.sql`) | API |
 | `localStorage['unicornt_cart']` con estado conocido | Precondición de cada TC, setear directamente vía `localStorage.setItem` para no depender de flujos de "Agregar" (que tienen el defecto DEF-001) | Fixture / `eval` en `beforeEach` |
+| Sesión autenticada (sólo TCs de checkout) | Usuario único por corrida vía `POST /api/v1/auth/register` | `apiRequest` fixture / helper `registerViaApi()` |
 
 ## Data shapes for key scenarios
 

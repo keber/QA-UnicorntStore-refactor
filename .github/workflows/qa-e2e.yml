@@ -41,7 +41,9 @@ jobs:
 
       - name: Run E2E tests
         env:
-          QA_BASE_URL: ${{ vars.QA_BASE_URL || 'https://unicornt-store.keber.cl' }}
+          # Target the isolated QA stack (see qa/README.md). Overridable via repo vars.
+          QA_BASE_URL: ${{ vars.QA_BASE_URL || 'https://unicornt-qa.keber.cl' }}
+          QA_API_URL: ${{ vars.QA_API_URL || 'https://api-unicornt-qa.keber.cl' }}
           CI: true
         run: npx playwright test --project=chromium --reporter=list,html
 
@@ -53,23 +55,17 @@ jobs:
           path: qa/07-automation/e2e/playwright-report/
           retention-days: 14
 
-      - name: Upload coverage report (artifact)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: qa/07-automation/e2e/coverage-reports/
-          retention-days: 14
+      # NOTE: code-coverage collection + publish is PARKED since the 2026-09-06 Vite migration
+      # (minified bundles, no sourcemaps, frontend build not in this repo). See
+      # qa/AGENT-NEXT-STEPS.md for the restore steps.
 
       # Only the report from main gets published as the public GitHub Pages
-      # site - PR/branch runs still get the artifacts above, not a live URL.
-      # Test report at the site root, code coverage report under /coverage/.
-      - name: Assemble Pages site (test report + coverage report)
+      # site - PR/branch runs still get the artifact above, not a live URL.
+      - name: Assemble Pages site (test report)
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          mkdir -p pages-site/coverage
+          mkdir -p pages-site
           [ -d playwright-report ] && cp -r playwright-report/. pages-site/ || true
-          [ -d coverage-reports ] && cp -r coverage-reports/. pages-site/coverage/ || true
 
       - name: Upload site for GitHub Pages
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'

@@ -2,7 +2,14 @@
 
 **Module code**: CAT
 **Submodule code**: LISTADO
-**Last updated**: 2026-08-26
+**Last updated**: 2026-09-06
+**version**: 1.1
+**change-summary**: Stage 6 "green first" — el listado ahora se carga de `GET /api/v1/products`
+(+ `GET /api/v1/categories`), muestra sólo los primeros 20 de 49, y tiene un filtro por categoría
+(`select#category-filter` → `?category=<slug>`). TC-039 (sin `<form>` de contacto) y TC-040 (sin
+`/api`) → `OBSOLETE-SCENARIO`. Selectores nuevos y reglas de espera en
+`qa/05-test-execution/STAGE6-REBASELINE-FINDINGS-2026-09-06.md` §2. Reescritura completa de specs
+de catálogo/filtro/paginación → sprint de re-baseline.
 
 ## Summary
 
@@ -886,7 +893,7 @@ contenido legal real en el refactor.
 
 ---
 
-### TC-CAT-LISTADO-039: No existe ningún formulario de contacto real
+### TC-CAT-LISTADO-039: `OBSOLETE-SCENARIO` — No existe ningún formulario de contacto real
 
 | Field | Value |
 |-------|-------|
@@ -896,19 +903,20 @@ contenido legal real en el refactor.
 | Automation | No |
 | Playwright | — |
 
-**Preconditions**: Ninguna.
+**Stage 6 (2026-09-06) — `OBSOLETE-SCENARIO`**: escenario negativo de la era del stub estático.
+"Contacto" sigue siendo un ancla `#contacto` al footer (no hay `<form>` de contacto — la
+afirmación de `AGENT-NEXT-STEPS` de que "ya existe uno" es incorrecta), pero `index.html` **sí**
+contiene ahora un `<form id="checkout-form">` (checkout) y hay páginas `login.html`/`register.html`
+con `<form>`. La aserción "no existe ningún `<form>`" ya no tiene sentido. Archivo conservado;
+sin automatización. Cobertura real del formulario de contacto (si algún día existe) → sprint de
+re-baseline.
 
-**Steps**:
-1. Navegar al listado.
-2. Buscar cualquier elemento `<form>` en la página.
-
-**Expected result**: No existe ningún `<form>`; "Contacto" es solo un ancla al footer estático.
-
-**Notes**: Confirma hallazgo de arquitectura.
+**Expected result** _(histórico, ya no válido)_: No existe ningún `<form>`; "Contacto" es solo un
+ancla al footer estático.
 
 ---
 
-### TC-CAT-LISTADO-040: No se observan llamadas de red a `/api`
+### TC-CAT-LISTADO-040: `OBSOLETE-SCENARIO` — No se observan llamadas de red a `/api`
 
 | Field | Value |
 |-------|-------|
@@ -918,16 +926,12 @@ contenido legal real en el refactor.
 | Automation | No |
 | Playwright | — |
 
-**Preconditions**: Ninguna.
+**Stage 6 (2026-09-06) — `OBSOLETE-SCENARIO`**: premisa invertida. El listado **ahora depende**
+de `GET /api/v1/products` + `GET /api/v1/categories` para renderizar. La cobertura positiva
+("el listado se carga desde la API") vive en `carrito`/`catalogo` specs de automatización.
+Archivo conservado; sin automatización.
 
-**Steps**:
-1. Navegar al listado con captura de network habilitada.
-2. Revisar todas las requests no estáticas.
-
-**Expected result**: 0 llamadas XHR/fetch a ningún endpoint `/api/*`. Solo recursos estáticos
-(HTML, CSS, JS, imágenes, CDN).
-
-**Notes**: Verificado con `requests` de `playwright-cli` en esta sesión.
+**Expected result** _(histórico, ya no válido)_: 0 llamadas XHR/fetch a ningún endpoint `/api/*`.
 
 ---
 
@@ -950,6 +954,10 @@ contenido legal real en el refactor.
 **Expected result**: No hay enlace ni botón de "Iniciar sesión", "Registro" ni similar.
 
 **Notes**: Confirma `project.loginPath: null` en `qa-framework.config.json`.
+**Stage 6 (2026-09-06)**: la aserción **sigue siendo válida** — el navbar no expone control de
+sesión ni siquiera con el usuario autenticado. Pero el refactor **sí** agregó autenticación:
+existen `login.html` y `register.html` (accesibles sólo por URL directa). Que no haya enlace en
+el navbar es una brecha de UX observada, no filada como defecto en esta iteración.
 
 ---
 
